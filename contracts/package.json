@@ -1,0 +1,25 @@
+{
+  "name": "@browser-mcp/contracts",
+  "version": "1.0.0",
+  "description": "Immutable interface contracts for Browser MCP Family (ISP enforcement)",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./mcp-server": "./dist/mcp-server/index.js",
+    "./business-logic": "./dist/business-logic/index.js",
+    "./protocol-adapters": "./dist/protocol-adapters/index.js",
+    "./events": "./dist/events/index.js",
+    "./types": "./dist/types/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  },
+  "peerDependencies": {},
+  "dependencies": {}
+}
