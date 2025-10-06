@@ -1,16 +1,22 @@
 {
   "name": "@browser-mcp/extension-chromium",
-  "version": "1.0.6",
+  "version": "1.0.9",
   "description": "Browser Inspector for AI - Chrome Extension",
   "type": "module",
   "scripts": {
     "build": "node build.js",
-    "watch": "node build.js --watch"
+    "watch": "node build.js --watch",
+    "test:e2e": "playwright test",
+    "test:e2e:smoke": "playwright test smoke.spec.ts",
+    "test:e2e:connection": "playwright test e2e-connection.spec.ts",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed"
   },
   "dependencies": {
     "eventemitter3": "^5.0.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.55.1",
     "@types/chrome": "^0.0.254",
     "@types/jsdom": "^27.0.0",
     "@types/node": "^20.10.0",

@@ -1,0 +1,47 @@
+{
+  "name": "@browser-mcp/companion",
+  "version": "1.0.9",
+  "description": "Easy companion app for Browser MCP - Auto-starts MCP server for browser inspection with AI assistants",
+  "type": "module",
+  "main": "index.js",
+  "bin": {
+    "browser-mcp-companion": "./index.js"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "browser",
+    "inspector",
+    "ai",
+    "claude",
+    "claude-code",
+    "debugging",
+    "chrome-extension",
+    "devtools"
+  ],
+  "author": "Browser MCP Contributors",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/browser-mcp.git",
+    "directory": "companion-app"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/browser-mcp/issues"
+  },
+  "homepage": "https://github.com/yourusername/browser-mcp#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "index.js",
+    "README.md"
+  ],
+  "dependencies": {
+    "express": "^4.18.2",
+    "open": "^10.0.0"
+  }
+}

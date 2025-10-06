@@ -1,6 +1,6 @@
 {
   "name": "@browser-mcp/test-harnesses",
-  "version": "1.0.6",
+  "version": "1.0.9",
   "description": "Test infrastructure with real browsers (Playwright)",
   "type": "module",
   "scripts": {

@@ -1,6 +1,6 @@
 {
   "name": "browser-mcp-family",
-  "version": "1.0.6",
+  "version": "1.0.9",
   "description": "Browser MCP Family - Expose browser state to AI assistants",
   "private": true,
   "workspaces": [
@@ -13,6 +13,7 @@
   ],
   "scripts": {
     "build": "npm run build --workspaces",
+    "companion": "cd companion-app && npm install && npm start",
     "test": "vitest",
     "test:unit": "vitest run --testNamePattern='unit'",
     "test:integration": "vitest run --testNamePattern='integration'",
