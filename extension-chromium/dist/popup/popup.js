@@ -1,176 +1,195 @@
 // popup/popup.ts
-var currentTabId = null;
-var currentTabUrl = null;
-var tabState = { isActive: false };
-async function initialize() {
-  try {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (!tab || !tab.id || !tab.url) {
-      showError("Could not get current tab information");
-      return;
-    }
-    currentTabId = tab.id;
-    currentTabUrl = tab.url;
-    const response = await chrome.runtime.sendMessage({
-      type: "GET_TAB_INFO",
-      payload: { tabId: currentTabId }
-    });
-    if (response.success && response.data) {
-      tabState = {
-        isActive: true,
-        port: response.data.port,
-        virtualFilesystemURI: response.data.virtualFilesystemURI
-      };
-    } else {
-      tabState = { isActive: false };
-    }
-    render();
-  } catch (error) {
-    console.error("Failed to initialize popup:", error);
-    showError("Failed to initialize: " + error.message);
-  }
-}
-function render() {
-  const content = document.getElementById("content");
-  if (!content) return;
-  content.innerHTML = `
-    <div class="tab-info">
-      <div class="tab-info-row">
-        <div class="tab-info-label">Status:</div>
-        <div class="tab-info-value">
-          <span class="status ${tabState.isActive ? "active" : "inactive"}">
-            ${tabState.isActive ? "Active" : "Inactive"}
-          </span>
-        </div>
-      </div>
-      <div class="tab-info-row">
-        <div class="tab-info-label">Tab URL:</div>
-        <div class="tab-info-value">${currentTabUrl}</div>
-      </div>
-      ${tabState.isActive && tabState.port ? `
-        <div class="tab-info-row">
-          <div class="tab-info-label">Port:</div>
-          <div class="tab-info-value">${tabState.port}</div>
-        </div>
-      ` : ""}
-    </div>
-
-    ${tabState.isActive ? `
-      <button class="deactivate" id="deactivate-btn">Deactivate Debugging</button>
-
-      ${tabState.port ? `
-        <div class="port-info">
-          <strong>Connect your AI Assistant:</strong>
-          <div>MCP Server: localhost:${tabState.port}</div>
-          <div>Virtual Filesystem: ${tabState.virtualFilesystemURI}</div>
-          <button class="copy-button" id="copy-port-btn">Copy Port</button>
-        </div>
-      ` : ""}
-    ` : `
-      <button class="activate" id="activate-btn">Activate Debugging</button>
-    `}
-  `;
-  if (tabState.isActive) {
-    const deactivateBtn = document.getElementById("deactivate-btn");
-    if (deactivateBtn) {
-      deactivateBtn.addEventListener("click", handleDeactivate);
-    }
-    const copyPortBtn = document.getElementById("copy-port-btn");
-    if (copyPortBtn && tabState.port) {
-      copyPortBtn.addEventListener("click", () => handleCopyPort(tabState.port));
-    }
-  } else {
-    const activateBtn = document.getElementById("activate-btn");
-    if (activateBtn) {
-      activateBtn.addEventListener("click", handleActivate);
-    }
-  }
-}
-async function handleActivate() {
-  if (!currentTabId || !currentTabUrl) {
-    showError("No tab selected");
-    return;
-  }
-  try {
-    const btn = document.getElementById("activate-btn");
-    if (btn) {
-      btn.disabled = true;
-      btn.textContent = "Activating...";
-    }
-    const response = await chrome.runtime.sendMessage({
-      type: "ACTIVATE_TAB",
-      payload: { tabId: currentTabId, url: currentTabUrl }
-    });
-    if (response.success) {
-      tabState = {
-        isActive: true,
-        port: response.data.port,
-        virtualFilesystemURI: response.data.virtualFilesystemURI
-      };
-      render();
-    } else {
-      showError("Failed to activate: " + response.error);
-      if (btn) {
-        btn.disabled = false;
-        btn.textContent = "Activate Debugging";
+var currentStep = 0;
+var selectedIDE = null;
+var IDE_CONFIGS = {
+  claude: {
+    name: "Claude Desktop",
+    path: {
+      mac: "~/Library/Application Support/Claude/claude_desktop_config.json",
+      linux: "~/.config/Claude/claude_desktop_config.json",
+      windows: "%APPDATA%\\Claude\\claude_desktop_config.json"
+    },
+    config: (extensionPath) => ({
+      mcpServers: {
+        "browser-inspector": {
+          command: "node",
+          args: [extensionPath],
+          env: {
+            NODE_ENV: "production"
+          }
+        }
       }
-    }
-  } catch (error) {
-    console.error("Failed to activate tab:", error);
-    showError("Failed to activate: " + error.message);
-  }
-}
-async function handleDeactivate() {
-  if (!currentTabId) {
-    showError("No tab selected");
-    return;
-  }
-  try {
-    const btn = document.getElementById("deactivate-btn");
-    if (btn) {
-      btn.disabled = true;
-      btn.textContent = "Deactivating...";
-    }
-    const response = await chrome.runtime.sendMessage({
-      type: "DEACTIVATE_TAB",
-      payload: { tabId: currentTabId }
-    });
-    if (response.success) {
-      tabState = { isActive: false };
-      render();
-    } else {
-      showError("Failed to deactivate: " + response.error);
-      if (btn) {
-        btn.disabled = false;
-        btn.textContent = "Deactivate Debugging";
+    })
+  },
+  cursor: {
+    name: "Cursor",
+    path: {
+      mac: "~/.cursor/mcp.json",
+      linux: "~/.cursor/mcp.json",
+      windows: "%USERPROFILE%\\.cursor\\mcp.json"
+    },
+    config: (extensionPath) => ({
+      mcpServers: {
+        "browser-inspector": {
+          command: "node",
+          args: [extensionPath],
+          env: {
+            NODE_ENV: "production"
+          }
+        }
       }
+    })
+  },
+  windsurf: {
+    name: "Windsurf",
+    path: {
+      mac: "~/.codeium/windsurf/mcp_config.json",
+      linux: "~/.codeium/windsurf/mcp_config.json",
+      windows: "%APPDATA%\\Codeium\\windsurf\\mcp_config.json"
+    },
+    config: (extensionPath) => ({
+      mcpServers: {
+        "browser-inspector": {
+          command: "node",
+          args: [extensionPath],
+          env: {
+            NODE_ENV: "production"
+          }
+        }
+      }
+    })
+  }
+};
+function getOS() {
+  const platform = navigator.platform.toLowerCase();
+  if (platform.includes("mac")) return "mac";
+  if (platform.includes("linux")) return "linux";
+  return "windows";
+}
+function getExtensionPath() {
+  return "<YOUR_PROJECT_PATH>/mcp-server/dist/index.js";
+}
+window.nextStep = () => {
+  if (currentStep < 3) {
+    const currentStepEl = document.querySelector(`.step[data-step="${currentStep}"]`);
+    const currentDot = document.querySelector(`.step-dot[data-step="${currentStep}"]`);
+    if (currentStepEl) currentStepEl.classList.remove("active");
+    if (currentDot) {
+      currentDot.classList.remove("active");
+      currentDot.classList.add("completed");
     }
-  } catch (error) {
-    console.error("Failed to deactivate tab:", error);
-    showError("Failed to deactivate: " + error.message);
+    currentStep++;
+    const nextStepEl = document.querySelector(`.step[data-step="${currentStep}"]`);
+    const nextDot = document.querySelector(`.step-dot[data-step="${currentStep}"]`);
+    if (nextStepEl) nextStepEl.classList.add("active");
+    if (nextDot) nextDot.classList.add("active");
+    if (currentStep === 2 && selectedIDE) {
+      generateConfig();
+    }
+  }
+};
+window.prevStep = () => {
+  if (currentStep > 0) {
+    const currentStepEl = document.querySelector(`.step[data-step="${currentStep}"]`);
+    const currentDot = document.querySelector(`.step-dot[data-step="${currentStep}"]`);
+    if (currentStepEl) currentStepEl.classList.remove("active");
+    if (currentDot) currentDot.classList.remove("active");
+    currentStep--;
+    const prevStepEl = document.querySelector(`.step[data-step="${currentStep}"]`);
+    const prevDot = document.querySelector(`.step-dot[data-step="${currentStep}"]`);
+    if (prevStepEl) prevStepEl.classList.add("active");
+    if (prevDot) {
+      prevDot.classList.add("active");
+      prevDot.classList.remove("completed");
+    }
+  }
+};
+window.resetWizard = () => {
+  currentStep = 0;
+  selectedIDE = null;
+  document.querySelectorAll(".step").forEach((el, index) => {
+    if (index === 0) {
+      el.classList.add("active");
+    } else {
+      el.classList.remove("active");
+    }
+  });
+  document.querySelectorAll(".step-dot").forEach((el, index) => {
+    el.classList.remove("active", "completed");
+    if (index === 0) {
+      el.classList.add("active");
+    }
+  });
+  document.querySelectorAll(".ide-option").forEach((el) => {
+    el.classList.remove("selected");
+  });
+  const continueBtn = document.getElementById("continueBtn");
+  if (continueBtn) continueBtn.disabled = true;
+};
+window.selectIDE = (ide) => {
+  selectedIDE = ide;
+  document.querySelectorAll(".ide-option").forEach((el) => {
+    if (el.getAttribute("data-ide") === ide) {
+      el.classList.add("selected");
+    } else {
+      el.classList.remove("selected");
+    }
+  });
+  const continueBtn = document.getElementById("continueBtn");
+  if (continueBtn) continueBtn.disabled = false;
+};
+function generateConfig() {
+  if (!selectedIDE) return;
+  const ideConfig = IDE_CONFIGS[selectedIDE];
+  const os = getOS();
+  const extensionPath = getExtensionPath();
+  const configPathEl = document.getElementById("configPath");
+  if (configPathEl) {
+    configPathEl.textContent = ideConfig.path[os];
+  }
+  const config = ideConfig.config(extensionPath);
+  const configJSON = JSON.stringify(config, null, 2);
+  const configContentEl = document.getElementById("configContent");
+  if (configContentEl) {
+    configContentEl.innerHTML = `<pre>${escapeHtml(configJSON)}</pre>`;
+  }
+  const ideNameFinal = document.getElementById("ideNameFinal");
+  if (ideNameFinal) {
+    ideNameFinal.textContent = ideConfig.name;
   }
 }
-async function handleCopyPort(port) {
+window.copyConfig = async () => {
+  if (!selectedIDE) return;
+  const ideConfig = IDE_CONFIGS[selectedIDE];
+  const extensionPath = getExtensionPath();
+  const config = ideConfig.config(extensionPath);
+  const configJSON = JSON.stringify(config, null, 2);
   try {
-    await navigator.clipboard.writeText(String(port));
-    const btn = document.getElementById("copy-port-btn");
-    if (btn) {
-      const originalText = btn.textContent;
-      btn.textContent = "Copied!";
-      setTimeout(() => {
-        btn.textContent = originalText;
-      }, 2e3);
-    }
-  } catch (error) {
-    console.error("Failed to copy port:", error);
+    await navigator.clipboard.writeText(configJSON);
+    const copyText = document.getElementById("copyText");
+    const copyBtn = document.querySelector(".copy-btn");
+    if (copyText) copyText.textContent = "\u2705 Copied!";
+    if (copyBtn) copyBtn.classList.add("copied");
+    setTimeout(() => {
+      if (copyText) copyText.textContent = "\u{1F4CB} Copy Configuration";
+      if (copyBtn) copyBtn.classList.remove("copied");
+    }, 2e3);
+  } catch (err) {
+    console.error("Failed to copy:", err);
+    alert("Failed to copy to clipboard. Please copy manually.");
   }
+};
+function escapeHtml(text) {
+  const div = document.createElement("div");
+  div.textContent = text;
+  return div.innerHTML;
 }
-function showError(message) {
-  const content = document.getElementById("content");
-  if (!content) return;
-  content.innerHTML = `
-    <div class="error">${message}</div>
-  `;
-}
-initialize();
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("Browser MCP Setup Wizard loaded");
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    if (tabs[0]) {
+      console.log("Current tab:", tabs[0].url);
+    }
+  });
+});
 //# sourceMappingURL=popup.js.map
