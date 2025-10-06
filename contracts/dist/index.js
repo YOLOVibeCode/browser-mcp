@@ -10,6 +10,8 @@ export * from './cdp';
 export * from './transport';
 // Virtual Filesystem Interfaces
 export * from './virtual-fs';
+// Session Management Interfaces
+export * from './session';
 // Types
 export * from './types';
 //# sourceMappingURL=index.js.map

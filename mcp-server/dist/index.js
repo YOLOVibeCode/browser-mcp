@@ -3,6 +3,7 @@ import { MCPServer } from '../../infrastructure/src/mcp-server/MCPServer';
 import { EventEmitterBus } from '../../infrastructure/src/event-bus/EventEmitterBus';
 import { PortManager } from '../../infrastructure/src/port-management/PortManager';
 import { TabManager } from '../../infrastructure/src/tab-management/TabManager';
+import { SessionManager } from '../../infrastructure/src/session/SessionManager';
 import { StdioTransport } from '../../infrastructure/src/transport/StdioTransport';
 import { VirtualFilesystemProvider } from '../../infrastructure/src/virtual-fs/VirtualFilesystemProvider';
 /**
@@ -20,6 +21,7 @@ async function main() {
     const eventBus = new EventEmitterBus();
     const portManager = new PortManager();
     const tabManager = new TabManager(eventBus);
+    const sessionManager = new SessionManager();
     const virtualFS = new VirtualFilesystemProvider();
     // Initialize MCP server
     const mcpServer = new MCPServer({
@@ -32,7 +34,7 @@ async function main() {
     console.error(`✅ ${serverInfo.name} v${serverInfo.version} initialized`);
     console.error(`   Capabilities: ${JSON.stringify(serverInfo.capabilities)}`);
     // Register example tools
-    registerTools(mcpServer, tabManager, eventBus);
+    registerTools(mcpServer, tabManager, sessionManager, eventBus);
     // Register example prompts
     registerPrompts(mcpServer);
     // Listen for tab events to register/unregister resources
@@ -109,7 +111,7 @@ async function main() {
         process.exit(0);
     });
 }
-function registerTools(mcpServer, tabManager, eventBus) {
+function registerTools(mcpServer, tabManager, sessionManager, eventBus) {
     // Tool: List active tabs
     const listTabsTool = {
         name: 'listActiveTabs',
@@ -151,9 +153,120 @@ function registerTools(mcpServer, tabManager, eventBus) {
             };
         },
     };
+    // Tool: Pin tab to session
+    const pinTabTool = {
+        name: 'pinTab',
+        description: 'Pin a specific tab to this IDE session for focused context',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                sessionId: { type: 'string', description: 'Session ID (unique per IDE window)' },
+                tabId: { type: 'number', description: 'Tab ID to pin' },
+            },
+            required: ['sessionId', 'tabId'],
+        },
+        execute: async (params) => {
+            const tabInfo = tabManager.getTabInfo(params.tabId);
+            if (!tabInfo) {
+                return {
+                    success: false,
+                    error: `Tab ${params.tabId} not found`,
+                };
+            }
+            sessionManager.pinTab(params.sessionId, params.tabId);
+            return {
+                success: true,
+                data: {
+                    message: `Tab ${params.tabId} pinned to session ${params.sessionId}`,
+                    tab: tabInfo,
+                },
+            };
+        },
+    };
+    // Tool: Unpin tab from session
+    const unpinTabTool = {
+        name: 'unpinTab',
+        description: 'Unpin the tab from this IDE session',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                sessionId: { type: 'string', description: 'Session ID' },
+            },
+            required: ['sessionId'],
+        },
+        execute: async (params) => {
+            const pinnedTab = sessionManager.getPinnedTab(params.sessionId);
+            if (!pinnedTab) {
+                return {
+                    success: false,
+                    error: `No tab pinned to session ${params.sessionId}`,
+                };
+            }
+            sessionManager.unpinTab(params.sessionId);
+            return {
+                success: true,
+                data: {
+                    message: `Tab ${pinnedTab} unpinned from session ${params.sessionId}`,
+                },
+            };
+        },
+    };
+    // Tool: Get pinned tab
+    const getPinnedTabTool = {
+        name: 'getPinnedTab',
+        description: 'Get which tab is pinned to this session',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                sessionId: { type: 'string', description: 'Session ID' },
+            },
+            required: ['sessionId'],
+        },
+        execute: async (params) => {
+            const tabId = sessionManager.getPinnedTab(params.sessionId);
+            if (!tabId) {
+                return {
+                    success: true,
+                    data: {
+                        pinned: false,
+                        message: 'No tab pinned to this session',
+                    },
+                };
+            }
+            const tabInfo = tabManager.getTabInfo(tabId);
+            return {
+                success: true,
+                data: {
+                    pinned: true,
+                    tabId,
+                    tab: tabInfo,
+                },
+            };
+        },
+    };
+    // Tool: List all session bindings
+    const listSessionBindingsTool = {
+        name: 'listSessionBindings',
+        description: 'List all active session-to-tab bindings',
+        inputSchema: {
+            type: 'object',
+            properties: {},
+        },
+        execute: async () => {
+            const bindings = sessionManager.getAllBindings();
+            return {
+                success: true,
+                data: bindings,
+            };
+        },
+    };
     mcpServer.registerTool(listTabsTool);
     mcpServer.registerTool(getTabInfoTool);
-    console.log(`   Registered ${2} tools`);
+    mcpServer.registerTool(pinTabTool);
+    mcpServer.registerTool(unpinTabTool);
+    mcpServer.registerTool(getPinnedTabTool);
+    mcpServer.registerTool(listSessionBindingsTool);
+    console.log(`   Registered ${6} tools`);
 }
 function registerPrompts(mcpServer) {
     mcpServer.registerPrompt({

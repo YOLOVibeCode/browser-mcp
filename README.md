@@ -10,11 +10,12 @@
 
 ## 🎉 Project Status
 
-**✅ FULLY FUNCTIONAL** - All core infrastructure implemented with **138/138 tests passing**
+**✅ FULLY FUNCTIONAL** - All core infrastructure implemented with **162/162 tests passing**
 
 - ✅ Event-driven architecture
 - ✅ Port management with real binding
 - ✅ Tab lifecycle management
+- ✅ **Session management & tab pinning** ⭐ NEW
 - ✅ Framework detection (React, Vue, Angular, jQuery)
 - ✅ Chrome DevTools Protocol integration
 - ✅ MCP Server with stdio transport
@@ -135,6 +136,12 @@ The MCP server exposes browser state as virtual resources:
 
 - `listActiveTabs` - List all active browser tabs
 - `getTabInfo` - Get information about a specific tab
+- **`pinTab`** - Pin a tab to your IDE session for focused context ⭐ NEW
+- **`unpinTab`** - Unpin tab from session ⭐ NEW
+- **`getPinnedTab`** - Check which tab is pinned ⭐ NEW
+- **`listSessionBindings`** - List all session bindings ⭐ NEW
+
+**See [TAB_PINNING_GUIDE.md](./TAB_PINNING_GUIDE.md) for detailed usage**
 
 ### Prompts
 
@@ -292,13 +299,14 @@ Each component has one job:
 | EventEmitterBus | 8 | 0 | 8 |
 | PortManager | 17 | 0 | 17 |
 | TabManager | 22 | 0 | 22 |
+| SessionManager | 24 | 0 | 24 |
 | FrameworkDetector | 17 | 4 | 21 |
 | ChromeTestInstance | 11 | 0 | 11 |
 | CDPAdapter | 15 | 0 | 15 |
 | MCPServer | 19 | 0 | 19 |
 | StdioTransport | 10 | 0 | 10 |
 | VirtualFilesystem | 15 | 0 | 15 |
-| **TOTAL** | **134** | **4** | **138** |
+| **TOTAL** | **158** | **4** | **162** |
 
 ---
 
