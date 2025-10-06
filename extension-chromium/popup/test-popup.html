@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Browser Inspector - Tab Manager</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 400px;
+      min-height: 300px;
+      padding: 0;
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 14px;
+      color: #333;
+      background: #f8f9fa;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .header h1 {
+      margin: 0 0 8px 0;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .header p {
+      margin: 0;
+      font-size: 13px;
+      opacity: 0.9;
+    }
+
+    .content {
+      padding: 20px;
+    }
+
+    .section {
+      background: white;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .section-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin: 0 0 12px 0;
+      color: #2c3e50;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .status-badge.connected {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .status-badge.disconnected {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .current-tab {
+      padding: 12px;
+      background: #f8f9fa;
+      border-radius: 6px;
+      margin-bottom: 12px;
+    }
+
+    .tab-url {
+      font-size: 12px;
+      color: #666;
+      word-break: break-all;
+      margin-bottom: 8px;
+    }
+
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      width: 100%;
+    }
+
+    button.primary {
+      background: #28a745;
+      color: white;
+    }
+
+    button.primary:hover {
+      background: #218838;
+      transform: translateY(-1px);
+    }
+
+    button.danger {
+      background: #dc3545;
+      color: white;
+    }
+
+    button.danger:hover {
+      background: #c82333;
+      transform: translateY(-1px);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .active-tabs-list {
+      margin-top: 12px;
+    }
+
+    .tab-item {
+      padding: 8px 12px;
+      background: #f8f9fa;
+      border-radius: 4px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+    }
+
+    .tab-info {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .port-badge {
+      background: #667eea;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      margin-left: 8px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 20px;
+      color: #999;
+      font-size: 13px;
+    }
+
+    .instructions {
+      background: #e7f3ff;
+      border-left: 4px solid #2196f3;
+      padding: 12px;
+      margin-bottom: 16px;
+      border-radius: 4px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .instructions strong {
+      color: #1976d2;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🔍 Browser Inspector</h1>
+    <p>Tab Connection Manager · v1.0.6</p>
+  </div>
+
+  <div class="content">
+    <div class="instructions">
+      <strong>Click "Connect This Tab" below 👇</strong>
+    </div>
+
+    <div class="section">
+      <h3 class="section-title">
+        Current Tab
+        <span id="currentTabStatus" class="status-badge disconnected">Disconnected</span>
+      </h3>
+      
+      <div class="current-tab">
+        <div class="tab-url" id="currentTabUrl">Loading...</div>
+        <button id="activateBtn" class="primary">🚀 Connect This Tab</button>
+        <button id="deactivateBtn" class="danger" style="display: none; margin-top: 8px;">⏹️ Disconnect This Tab</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3 class="section-title">Active Connections</h3>
+      <div id="activeTabsList" class="active-tabs-list">
+        <div class="empty-state">No active connections</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3 class="section-title">📋 Changelog</h3>
+      <div style="font-size: 12px; line-height: 1.5; color: #666;">
+        <div style="margin-bottom: 8px;">
+          <strong style="color: #28a745;">v1.0.6</strong> <span style="color: #999;">· Current</span><br>
+        <div style="margin-bottom: 8px;">
+          <strong style="color: #28a745;">v1.0.6</strong> <span style="color: #999;">· Current</span><br>
+          Added version display • Concise changelog • 1-click instructions
+        </div>
+
+          <strong style="color: #667eea;">v1.0.4</strong><br>
+          Bulletproofed error handling • Timeout protection
+        </div>
+        <div>
+          <strong style="color: #667eea;">v1.0.3</strong><br>
+          Native messaging • Setup wizard
+        </div>
+      </div>
+    </div>
+    </div>
+  </div>
+
+  <script src="test-popup.js"></script>
+</body>
+</html>
