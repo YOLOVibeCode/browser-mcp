@@ -1,6 +1,6 @@
 {
   "name": "@browser-mcp/extension-chromium",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Browser Inspector for AI - Chrome Extension",
   "type": "module",
   "scripts": {

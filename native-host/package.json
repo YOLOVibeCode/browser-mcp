@@ -1,6 +1,6 @@
 {
   "name": "browser-mcp-native-host",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Native messaging host for Browser MCP Chrome extension",
   "main": "host.js",
   "bin": {
