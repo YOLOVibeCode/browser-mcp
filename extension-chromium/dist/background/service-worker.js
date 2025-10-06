@@ -373,6 +373,33 @@ var TabManager = class {
   }
 };
 
+// background/ConnectionStatusManager.ts
+function calculateBadgeUpdate(status) {
+  if (status.activeTabCount > 0) {
+    const tabText = status.activeTabCount === 1 ? "tab" : "tabs";
+    return {
+      text: status.activeTabCount.toString(),
+      backgroundColor: "#28a745",
+      // Green
+      title: `Browser Inspector - ${status.activeTabCount} active ${tabText}`
+    };
+  } else {
+    return {
+      text: "",
+      backgroundColor: "#ff9500",
+      // Orange (not used when text is empty)
+      title: "Browser Inspector - Not Connected"
+    };
+  }
+}
+function applyBadgeUpdate(update, chromeAPI) {
+  chromeAPI.setBadgeText({ text: update.text });
+  if (update.text !== "") {
+    chromeAPI.setBadgeBackgroundColor({ color: update.backgroundColor });
+  }
+  chromeAPI.setTitle({ title: update.title });
+}
+
 // background/service-worker.ts
 var ServiceWorkerState = class {
   constructor() {
@@ -402,6 +429,25 @@ function initialize() {
   console.log("[Service Worker] Initializing Browser Inspector...");
   state = new ServiceWorkerState();
   console.log("[Service Worker] Initialized successfully");
+  updateIcon(false);
+}
+var chromeActionAPI = {
+  setBadgeText: (details) => chrome.action.setBadgeText(details),
+  setBadgeBackgroundColor: (details) => chrome.action.setBadgeBackgroundColor(details),
+  setTitle: (details) => chrome.action.setTitle(details)
+};
+function updateIcon(hasActiveConnections) {
+  try {
+    const activeTabCount = state?.tabManager.getAllActiveTabs().length || 0;
+    const status = {
+      hasActiveConnections,
+      activeTabCount
+    };
+    const badgeUpdate = calculateBadgeUpdate(status);
+    applyBadgeUpdate(badgeUpdate, chromeActionAPI);
+  } catch (err) {
+    console.error("[Service Worker] Error updating icon:", err);
+  }
 }
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.log("[Service Worker] Received message:", message);
@@ -440,6 +486,7 @@ async function handleActivateTab(payload) {
     timestamp: Date.now()
   });
   await state.tabManager.activateTab(tabId, url, port);
+  updateIcon(true);
   return {
     port,
     virtualFilesystemURI: state.tabManager.getVirtualFilesystemURI(tabId)
@@ -450,6 +497,9 @@ async function handleDeactivateTab(payload) {
   const { tabId } = payload;
   await state.tabManager.deactivateTab(tabId);
   state.portManager.releasePort(tabId);
+  const activeTabs = state.tabManager.getAllActiveTabs();
+  const hasActiveConnections = activeTabs.length > 0;
+  updateIcon(hasActiveConnections);
 }
 initialize();
 console.log("[Service Worker] Browser Inspector loaded");

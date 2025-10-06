@@ -1,5 +1,5 @@
 /**
- * Browser MCP Setup Wizard Logic - Bulletproofed with comprehensive error handling
+ * Browser MCP Setup Wizard Logic - Simplified Manual Copy Only
  */
 
 let currentStep = 0;
@@ -270,16 +270,11 @@ function generateConfig() {
       configPathEl.textContent = defaultPath;
     }
 
-    const defaultConfigPathEl = document.getElementById('defaultConfigPath');
-    if (defaultConfigPathEl) {
-      defaultConfigPathEl.textContent = defaultPath;
-    }
-
     // Generate config JSON
     const config = ideConfig.config(extensionPath);
     const configJSON = JSON.stringify(config, null, 2);
 
-    // Update config content with syntax highlighting
+    // Update config content
     const configContentEl = document.getElementById('configContent');
     if (configContentEl) {
       configContentEl.innerHTML = `<pre>${escapeHtml(configJSON)}</pre>`;
@@ -326,7 +321,6 @@ async function copyConfig() {
     }
   } catch (err) {
     console.error('Error in copyConfig:', err);
-    showStatus('error', '❌ Error copying configuration.');
   }
 }
 
@@ -342,294 +336,10 @@ function escapeHtml(text: string): string {
   }
 }
 
-// Track selected configuration method
-let configMethod: 'auto' | 'manual' = 'auto';
-
-// Switch between auto and manual configuration
-function selectConfigMethod(method: 'auto' | 'manual') {
-  try {
-    configMethod = method;
-
-    // Update UI
-    document.querySelectorAll('.method-option').forEach(el => {
-      if (el.getAttribute('data-method') === method) {
-        el.classList.add('selected');
-      } else {
-        el.classList.remove('selected');
-      }
-    });
-
-    // Show/hide sections
-    const autoSection = document.getElementById('autoConfigSection');
-    const manualSection = document.getElementById('manualConfigSection');
-
-    if (autoSection && manualSection) {
-      if (method === 'auto') {
-        autoSection.style.display = 'block';
-        manualSection.style.display = 'none';
-      } else {
-        autoSection.style.display = 'none';
-        manualSection.style.display = 'block';
-
-        // Generate config for manual section too
-        if (selectedIDE) {
-          const ideConfig = IDE_CONFIGS[selectedIDE as keyof typeof IDE_CONFIGS];
-          const os = getOS();
-          const extensionPath = getExtensionPath();
-
-          const configPathManual = document.getElementById('configPathManual');
-          if (configPathManual) {
-            configPathManual.textContent = ideConfig.path[os];
-          }
-
-          const config = ideConfig.config(extensionPath);
-          const configJSON = JSON.stringify(config, null, 2);
-
-          const configContentManual = document.getElementById('configContentManual');
-          if (configContentManual) {
-            configContentManual.innerHTML = `<pre>${escapeHtml(configJSON)}</pre>`;
-          }
-        }
-      }
-    }
-  } catch (err) {
-    console.error('Error in selectConfigMethod:', err);
-    showStatus('error', '❌ Error switching configuration method.');
-  }
-}
-
-// Fallback to download method if native messaging fails
-function fallbackToDownload(config: any, configPath: string, ide: string) {
-  try {
-    showStatus('info', '💡 Native host not installed. Downloading config file instead...');
-
-    setTimeout(async () => {
-      try {
-        const configJSON = JSON.stringify(config, null, 2);
-
-        // Download the config file
-        const blob = new Blob([configJSON], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-
-        // Determine filename based on IDE
-        let filename = 'browser-mcp-config.json';
-        if (ide === 'claude') {
-          filename = 'claude_desktop_config.json';
-        } else if (ide === 'cursor') {
-          filename = 'mcp.json';
-        } else if (ide === 'windsurf') {
-          filename = 'mcp_config.json';
-        }
-
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-
-        // Copy path to clipboard for convenience
-        try {
-          await navigator.clipboard.writeText(configPath);
-          showStatus('success', `✅ Config downloaded! Path copied to clipboard:\n📁 ${configPath}\n\nMove the downloaded file to that location.\n\n💡 Tip: Install native host for automatic writing!`);
-        } catch {
-          showStatus('success', `✅ Config downloaded as "${filename}"!\n\nMove it to: ${configPath}\n\n💡 Tip: Install native host for automatic writing!`);
-        }
-
-        // Auto-advance after showing the message
-        setTimeout(() => {
-          try {
-            nextStep();
-          } catch (err) {
-            console.error('Error advancing to next step:', err);
-          }
-        }, 4000);
-      } catch (err) {
-        console.error('Error in download fallback:', err);
-        showStatus('error', '❌ Failed to download config file. Please use manual copy method.');
-        setTimeout(() => {
-          try {
-            selectConfigMethod('manual');
-          } catch (e) {
-            console.error('Error switching to manual mode:', e);
-          }
-        }, 2000);
-      }
-    }, 500);
-  } catch (err) {
-    console.error('Critical error in fallbackToDownload:', err);
-    showStatus('error', '❌ An error occurred. Please refresh and try again.');
-  }
-}
-
-// Browse for file path
-async function browseFilePath() {
-  try {
-    showStatus('info', 'Note: Chrome extensions cannot browse files directly. Please enter the path manually or use the default location.');
-  } catch (err) {
-    console.error('Error in browseFilePath:', err);
-  }
-}
-
-// Write configuration automatically with timeout protection
-async function writeConfiguration() {
-  if (!selectedIDE) return;
-
-  const statusEl = document.getElementById('writeStatus');
-  if (!statusEl) {
-    console.error('Status element not found');
-    return;
-  }
-
-  let port: chrome.runtime.Port | null = null;
-  let timeoutId: number | null = null;
-  let responseReceived = false;
-
-  try {
-    // Validate project path first
-    const extensionPath = getExtensionPath();
-    if (extensionPath.includes('/path/to/') || extensionPath.includes('<YOUR_PROJECT_PATH>')) {
-      showStatus('error', '❌ Please enter your actual Browser MCP project path first!');
-      const projectPathInput = document.getElementById('projectPath') as HTMLInputElement;
-      if (projectPathInput) {
-        projectPathInput.focus();
-        projectPathInput.style.borderColor = '#dc3545';
-        setTimeout(() => {
-          projectPathInput.style.borderColor = '';
-        }, 2000);
-      }
-      return;
-    }
-
-    showStatus('info', '🔄 Writing configuration file...');
-
-    const ideConfig = IDE_CONFIGS[selectedIDE as keyof typeof IDE_CONFIGS];
-    const os = getOS();
-    const customConfigPath = (document.getElementById('customConfigPath') as HTMLInputElement)?.value.trim();
-    const configPath = customConfigPath || ideConfig.path[os];
-
-    // Store the project path for future use
-    try {
-      localStorage.setItem('browserMCP_projectPath', extensionPath);
-    } catch (err) {
-      console.error('Error saving to localStorage:', err);
-    }
-
-    const config = ideConfig.config(extensionPath);
-
-    // Check if chrome.runtime.connectNative is available
-    if (!chrome?.runtime?.connectNative) {
-      console.log('Native messaging API not available');
-      fallbackToDownload(config, configPath, selectedIDE);
-      return;
-    }
-
-    // Try native messaging first (automatic file writing)
-    try {
-      port = chrome.runtime.connectNative('com.browser_mcp.native_host');
-
-      // Set up timeout (10 seconds)
-      timeoutId = window.setTimeout(() => {
-        if (!responseReceived && port) {
-          console.log('Native messaging timeout');
-          try {
-            port.disconnect();
-          } catch (err) {
-            console.error('Error disconnecting port:', err);
-          }
-          fallbackToDownload(config, configPath, selectedIDE);
-        }
-      }, 10000);
-
-      port.onMessage.addListener((response) => {
-        try {
-          responseReceived = true;
-          if (timeoutId) {
-            clearTimeout(timeoutId);
-            timeoutId = null;
-          }
-
-          if (response && response.success) {
-            showStatus('success', `✅ Configuration written automatically!\n📁 ${response.path}\n\nRestart your IDE to load the new configuration.`);
-
-            // Auto-advance after showing the message
-            setTimeout(() => {
-              try {
-                nextStep();
-              } catch (err) {
-                console.error('Error advancing to next step:', err);
-              }
-            }, 3000);
-          } else {
-            console.error('Native host error:', response?.error || 'Unknown error');
-            // Fall back to download method
-            fallbackToDownload(config, configPath, selectedIDE);
-          }
-        } catch (err) {
-          console.error('Error handling native message response:', err);
-          fallbackToDownload(config, configPath, selectedIDE);
-        }
-      });
-
-      port.onDisconnect.addListener(() => {
-        try {
-          if (!responseReceived) {
-            if (timeoutId) {
-              clearTimeout(timeoutId);
-              timeoutId = null;
-            }
-            const error = chrome.runtime.lastError;
-            console.log('Native host not available:', error?.message || 'Unknown error');
-            // Fall back to download method
-            fallbackToDownload(config, configPath, selectedIDE);
-          }
-        } catch (err) {
-          console.error('Error in disconnect handler:', err);
-          fallbackToDownload(config, configPath, selectedIDE);
-        }
-      });
-
-      // Send write config request
-      port.postMessage({
-        type: 'WRITE_CONFIG',
-        path: configPath,
-        content: config,
-        merge: true // Merge with existing config
-      });
-
-    } catch (err) {
-      console.log('Native messaging not available, falling back to download', err);
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-        timeoutId = null;
-      }
-      fallbackToDownload(config, configPath, selectedIDE);
-    }
-  } catch (err) {
-    console.error('Critical error in writeConfiguration:', err);
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-      timeoutId = null;
-    }
-    showStatus('error', `❌ Error: ${(err as Error).message || 'Unknown error'}`);
-
-    // Show fallback
-    setTimeout(() => {
-      try {
-        selectConfigMethod('manual');
-        showStatus('info', '💡 Please use manual copy method instead.');
-      } catch (e) {
-        console.error('Error showing fallback:', e);
-      }
-    }, 3000);
-  }
-}
-
-// Show status message with null checks
+// Show status message
 function showStatus(type: 'success' | 'error' | 'info', message: string) {
   try {
-    const statusEl = document.getElementById('writeStatus');
+    const statusEl = document.getElementById('configStatus');
     if (!statusEl) {
       console.error('Status element not found');
       return;
@@ -643,12 +353,10 @@ function showStatus(type: 'success' | 'error' | 'info', message: string) {
   }
 }
 
-// Initialize on load with comprehensive error handling
+// Initialize on load
 document.addEventListener('DOMContentLoaded', () => {
   try {
     console.log('Browser MCP Setup Wizard loaded');
-
-    // Setup event listeners with defensive checks
 
     // Step 0: Get Started button
     const getStartedBtn = document.getElementById('getStartedBtn');
@@ -696,18 +404,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // Step 2: Config method selection
-    document.querySelectorAll('.method-option').forEach(el => {
-      el.addEventListener('click', () => {
-        try {
-          const method = el.getAttribute('data-method') as 'auto' | 'manual';
-          if (method) selectConfigMethod(method);
-        } catch (err) {
-          console.error('Error in method-option click:', err);
-        }
-      });
-    });
-
     // Project path input - regenerate config when changed
     const projectPathInput = document.getElementById('projectPath') as HTMLInputElement;
     if (projectPathInput) {
@@ -740,18 +436,6 @@ document.addEventListener('DOMContentLoaded', () => {
           detectProjectPath();
         } catch (err) {
           console.error('Error in detectBtn click:', err);
-        }
-      });
-    }
-
-    const writeConfigBtn = document.getElementById('writeConfigBtn');
-    if (writeConfigBtn) {
-      writeConfigBtn.addEventListener('click', () => {
-        try {
-          writeConfiguration();
-        } catch (err) {
-          console.error('Error in writeConfigBtn click:', err);
-          showStatus('error', '❌ An error occurred. Please try manual copy instead.');
         }
       });
     }
@@ -812,25 +496,40 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // Detect current tab info
-    try {
-      if (chrome?.tabs?.query) {
-        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-          try {
-            if (tabs && tabs[0]) {
-              console.log('Current tab:', tabs[0].url);
-              // Extension is active for this tab
-            }
-          } catch (err) {
-            console.error('Error in tabs query callback:', err);
-          }
-        });
-      }
-    } catch (err) {
-      console.error('Error querying tabs:', err);
-    }
+    // Check connection status and update UI
+    checkConnectionStatus();
   } catch (err) {
     console.error('Critical error in DOMContentLoaded:', err);
     alert('Extension initialization error. Please refresh the popup.');
   }
 });
+
+// Check if extension is connected to current tab
+async function checkConnectionStatus() {
+  try {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tabs[0]) {
+      const response = await chrome.runtime.sendMessage({
+        type: 'GET_TAB_INFO',
+        payload: { tabId: tabs[0].id }
+      });
+
+      if (response.success && response.data) {
+        // Tab is connected
+        updateConnectionIndicator(true, response.data);
+      } else {
+        // Tab is not connected
+        updateConnectionIndicator(false, null);
+      }
+    }
+  } catch (err) {
+    console.error('Error checking connection status:', err);
+    updateConnectionIndicator(false, null);
+  }
+}
+
+// Update connection indicator in popup
+function updateConnectionIndicator(connected: boolean, tabInfo: any) {
+  // This will be called to update visual indicators
+  console.log('Connection status:', connected ? 'Connected' : 'Not connected', tabInfo);
+}

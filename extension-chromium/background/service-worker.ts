@@ -15,6 +15,14 @@ import { EventEmitterBus } from '../../infrastructure/src/event-bus/EventEmitter
 import { BrowserPortManager } from './BrowserPortManager';
 import { TabManager } from '../../infrastructure/src/tab-management/TabManager';
 
+// Import connection status manager (ISP-compliant, testable)
+import {
+  calculateBadgeUpdate,
+  applyBadgeUpdate,
+  type IConnectionStatus,
+  type IChromeActionAPI
+} from './ConnectionStatusManager';
+
 /**
  * Service Worker State
  */
@@ -67,6 +75,37 @@ function initialize(): void {
   console.log('[Service Worker] Initializing Browser Inspector...');
   state = new ServiceWorkerState();
   console.log('[Service Worker] Initialized successfully');
+
+  // Set initial icon to inactive state
+  updateIcon(false);
+}
+
+/**
+ * Chrome API wrapper for testing
+ */
+const chromeActionAPI: IChromeActionAPI = {
+  setBadgeText: (details) => chrome.action.setBadgeText(details),
+  setBadgeBackgroundColor: (details) => chrome.action.setBadgeBackgroundColor(details),
+  setTitle: (details) => chrome.action.setTitle(details)
+};
+
+/**
+ * Update extension icon based on connection state
+ * Now uses ISP-compliant ConnectionStatusManager for testability
+ */
+function updateIcon(hasActiveConnections: boolean): void {
+  try {
+    const activeTabCount = state?.tabManager.getAllActiveTabs().length || 0;
+    const status: IConnectionStatus = {
+      hasActiveConnections,
+      activeTabCount
+    };
+
+    const badgeUpdate = calculateBadgeUpdate(status);
+    applyBadgeUpdate(badgeUpdate, chromeActionAPI);
+  } catch (err) {
+    console.error('[Service Worker] Error updating icon:', err);
+  }
 }
 
 /**
@@ -133,6 +172,9 @@ async function handleActivateTab(payload: { tabId: number; url: string }): Promi
   // Activate tab
   await state.tabManager.activateTab(tabId, url, port);
 
+  // Update icon to show active connection
+  updateIcon(true);
+
   return {
     port,
     virtualFilesystemURI: state.tabManager.getVirtualFilesystemURI(tabId),
@@ -152,6 +194,13 @@ async function handleDeactivateTab(payload: { tabId: number }): Promise<void> {
 
   // Release port
   state.portManager.releasePort(tabId);
+
+  // Check if any tabs are still active
+  const activeTabs = state.tabManager.getAllActiveTabs();
+  const hasActiveConnections = activeTabs.length > 0;
+
+  // Update icon based on remaining connections
+  updateIcon(hasActiveConnections);
 }
 
 /**

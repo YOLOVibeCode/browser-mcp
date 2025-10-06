@@ -212,10 +212,6 @@ function generateConfig() {
     if (configPathEl) {
       configPathEl.textContent = defaultPath;
     }
-    const defaultConfigPathEl = document.getElementById("defaultConfigPath");
-    if (defaultConfigPathEl) {
-      defaultConfigPathEl.textContent = defaultPath;
-    }
     const config = ideConfig.config(extensionPath);
     const configJSON = JSON.stringify(config, null, 2);
     const configContentEl = document.getElementById("configContent");
@@ -254,7 +250,6 @@ async function copyConfig() {
     }
   } catch (err) {
     console.error("Error in copyConfig:", err);
-    showStatus("error", "\u274C Error copying configuration.");
   }
 }
 function escapeHtml(text) {
@@ -267,242 +262,9 @@ function escapeHtml(text) {
     return text;
   }
 }
-var configMethod = "auto";
-function selectConfigMethod(method) {
-  try {
-    configMethod = method;
-    document.querySelectorAll(".method-option").forEach((el) => {
-      if (el.getAttribute("data-method") === method) {
-        el.classList.add("selected");
-      } else {
-        el.classList.remove("selected");
-      }
-    });
-    const autoSection = document.getElementById("autoConfigSection");
-    const manualSection = document.getElementById("manualConfigSection");
-    if (autoSection && manualSection) {
-      if (method === "auto") {
-        autoSection.style.display = "block";
-        manualSection.style.display = "none";
-      } else {
-        autoSection.style.display = "none";
-        manualSection.style.display = "block";
-        if (selectedIDE) {
-          const ideConfig = IDE_CONFIGS[selectedIDE];
-          const os = getOS();
-          const extensionPath = getExtensionPath();
-          const configPathManual = document.getElementById("configPathManual");
-          if (configPathManual) {
-            configPathManual.textContent = ideConfig.path[os];
-          }
-          const config = ideConfig.config(extensionPath);
-          const configJSON = JSON.stringify(config, null, 2);
-          const configContentManual = document.getElementById("configContentManual");
-          if (configContentManual) {
-            configContentManual.innerHTML = `<pre>${escapeHtml(configJSON)}</pre>`;
-          }
-        }
-      }
-    }
-  } catch (err) {
-    console.error("Error in selectConfigMethod:", err);
-    showStatus("error", "\u274C Error switching configuration method.");
-  }
-}
-function fallbackToDownload(config, configPath, ide) {
-  try {
-    showStatus("info", "\u{1F4A1} Native host not installed. Downloading config file instead...");
-    setTimeout(async () => {
-      try {
-        const configJSON = JSON.stringify(config, null, 2);
-        const blob = new Blob([configJSON], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        let filename = "browser-mcp-config.json";
-        if (ide === "claude") {
-          filename = "claude_desktop_config.json";
-        } else if (ide === "cursor") {
-          filename = "mcp.json";
-        } else if (ide === "windsurf") {
-          filename = "mcp_config.json";
-        }
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        try {
-          await navigator.clipboard.writeText(configPath);
-          showStatus("success", `\u2705 Config downloaded! Path copied to clipboard:
-\u{1F4C1} ${configPath}
-
-Move the downloaded file to that location.
-
-\u{1F4A1} Tip: Install native host for automatic writing!`);
-        } catch {
-          showStatus("success", `\u2705 Config downloaded as "${filename}"!
-
-Move it to: ${configPath}
-
-\u{1F4A1} Tip: Install native host for automatic writing!`);
-        }
-        setTimeout(() => {
-          try {
-            nextStep();
-          } catch (err) {
-            console.error("Error advancing to next step:", err);
-          }
-        }, 4e3);
-      } catch (err) {
-        console.error("Error in download fallback:", err);
-        showStatus("error", "\u274C Failed to download config file. Please use manual copy method.");
-        setTimeout(() => {
-          try {
-            selectConfigMethod("manual");
-          } catch (e) {
-            console.error("Error switching to manual mode:", e);
-          }
-        }, 2e3);
-      }
-    }, 500);
-  } catch (err) {
-    console.error("Critical error in fallbackToDownload:", err);
-    showStatus("error", "\u274C An error occurred. Please refresh and try again.");
-  }
-}
-async function writeConfiguration() {
-  if (!selectedIDE) return;
-  const statusEl = document.getElementById("writeStatus");
-  if (!statusEl) {
-    console.error("Status element not found");
-    return;
-  }
-  let port = null;
-  let timeoutId = null;
-  let responseReceived = false;
-  try {
-    const extensionPath = getExtensionPath();
-    if (extensionPath.includes("/path/to/") || extensionPath.includes("<YOUR_PROJECT_PATH>")) {
-      showStatus("error", "\u274C Please enter your actual Browser MCP project path first!");
-      const projectPathInput = document.getElementById("projectPath");
-      if (projectPathInput) {
-        projectPathInput.focus();
-        projectPathInput.style.borderColor = "#dc3545";
-        setTimeout(() => {
-          projectPathInput.style.borderColor = "";
-        }, 2e3);
-      }
-      return;
-    }
-    showStatus("info", "\u{1F504} Writing configuration file...");
-    const ideConfig = IDE_CONFIGS[selectedIDE];
-    const os = getOS();
-    const customConfigPath = document.getElementById("customConfigPath")?.value.trim();
-    const configPath = customConfigPath || ideConfig.path[os];
-    try {
-      localStorage.setItem("browserMCP_projectPath", extensionPath);
-    } catch (err) {
-      console.error("Error saving to localStorage:", err);
-    }
-    const config = ideConfig.config(extensionPath);
-    if (!chrome?.runtime?.connectNative) {
-      console.log("Native messaging API not available");
-      fallbackToDownload(config, configPath, selectedIDE);
-      return;
-    }
-    try {
-      port = chrome.runtime.connectNative("com.browser_mcp.native_host");
-      timeoutId = window.setTimeout(() => {
-        if (!responseReceived && port) {
-          console.log("Native messaging timeout");
-          try {
-            port.disconnect();
-          } catch (err) {
-            console.error("Error disconnecting port:", err);
-          }
-          fallbackToDownload(config, configPath, selectedIDE);
-        }
-      }, 1e4);
-      port.onMessage.addListener((response) => {
-        try {
-          responseReceived = true;
-          if (timeoutId) {
-            clearTimeout(timeoutId);
-            timeoutId = null;
-          }
-          if (response && response.success) {
-            showStatus("success", `\u2705 Configuration written automatically!
-\u{1F4C1} ${response.path}
-
-Restart your IDE to load the new configuration.`);
-            setTimeout(() => {
-              try {
-                nextStep();
-              } catch (err) {
-                console.error("Error advancing to next step:", err);
-              }
-            }, 3e3);
-          } else {
-            console.error("Native host error:", response?.error || "Unknown error");
-            fallbackToDownload(config, configPath, selectedIDE);
-          }
-        } catch (err) {
-          console.error("Error handling native message response:", err);
-          fallbackToDownload(config, configPath, selectedIDE);
-        }
-      });
-      port.onDisconnect.addListener(() => {
-        try {
-          if (!responseReceived) {
-            if (timeoutId) {
-              clearTimeout(timeoutId);
-              timeoutId = null;
-            }
-            const error = chrome.runtime.lastError;
-            console.log("Native host not available:", error?.message || "Unknown error");
-            fallbackToDownload(config, configPath, selectedIDE);
-          }
-        } catch (err) {
-          console.error("Error in disconnect handler:", err);
-          fallbackToDownload(config, configPath, selectedIDE);
-        }
-      });
-      port.postMessage({
-        type: "WRITE_CONFIG",
-        path: configPath,
-        content: config,
-        merge: true
-        // Merge with existing config
-      });
-    } catch (err) {
-      console.log("Native messaging not available, falling back to download", err);
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-        timeoutId = null;
-      }
-      fallbackToDownload(config, configPath, selectedIDE);
-    }
-  } catch (err) {
-    console.error("Critical error in writeConfiguration:", err);
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-      timeoutId = null;
-    }
-    showStatus("error", `\u274C Error: ${err.message || "Unknown error"}`);
-    setTimeout(() => {
-      try {
-        selectConfigMethod("manual");
-        showStatus("info", "\u{1F4A1} Please use manual copy method instead.");
-      } catch (e) {
-        console.error("Error showing fallback:", e);
-      }
-    }, 3e3);
-  }
-}
 function showStatus(type, message) {
   try {
-    const statusEl = document.getElementById("writeStatus");
+    const statusEl = document.getElementById("configStatus");
     if (!statusEl) {
       console.error("Status element not found");
       return;
@@ -557,16 +319,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       });
     }
-    document.querySelectorAll(".method-option").forEach((el) => {
-      el.addEventListener("click", () => {
-        try {
-          const method = el.getAttribute("data-method");
-          if (method) selectConfigMethod(method);
-        } catch (err) {
-          console.error("Error in method-option click:", err);
-        }
-      });
-    });
     const projectPathInput = document.getElementById("projectPath");
     if (projectPathInput) {
       try {
@@ -594,17 +346,6 @@ document.addEventListener("DOMContentLoaded", () => {
           detectProjectPath();
         } catch (err) {
           console.error("Error in detectBtn click:", err);
-        }
-      });
-    }
-    const writeConfigBtn = document.getElementById("writeConfigBtn");
-    if (writeConfigBtn) {
-      writeConfigBtn.addEventListener("click", () => {
-        try {
-          writeConfiguration();
-        } catch (err) {
-          console.error("Error in writeConfigBtn click:", err);
-          showStatus("error", "\u274C An error occurred. Please try manual copy instead.");
         }
       });
     }
@@ -658,24 +399,32 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       });
     }
-    try {
-      if (chrome?.tabs?.query) {
-        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-          try {
-            if (tabs && tabs[0]) {
-              console.log("Current tab:", tabs[0].url);
-            }
-          } catch (err) {
-            console.error("Error in tabs query callback:", err);
-          }
-        });
-      }
-    } catch (err) {
-      console.error("Error querying tabs:", err);
-    }
+    checkConnectionStatus();
   } catch (err) {
     console.error("Critical error in DOMContentLoaded:", err);
     alert("Extension initialization error. Please refresh the popup.");
   }
 });
+async function checkConnectionStatus() {
+  try {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tabs[0]) {
+      const response = await chrome.runtime.sendMessage({
+        type: "GET_TAB_INFO",
+        payload: { tabId: tabs[0].id }
+      });
+      if (response.success && response.data) {
+        updateConnectionIndicator(true, response.data);
+      } else {
+        updateConnectionIndicator(false, null);
+      }
+    }
+  } catch (err) {
+    console.error("Error checking connection status:", err);
+    updateConnectionIndicator(false, null);
+  }
+}
+function updateConnectionIndicator(connected, tabInfo) {
+  console.log("Connection status:", connected ? "Connected" : "Not connected", tabInfo);
+}
 //# sourceMappingURL=popup.js.map
