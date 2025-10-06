@@ -1,8 +1,8 @@
-# @browser-mcp/companion
+# browser-mcp-companion
 
 > Easy companion app for Browser MCP - Auto-starts MCP server for browser inspection with AI assistants
 
-[![npm version](https://img.shields.io/npm/v/@browser-mcp/companion.svg)](https://www.npmjs.com/package/@browser-mcp/companion)
+[![npm version](https://img.shields.io/npm/v/browser-mcp-companion.svg)](https://www.npmjs.com/package/browser-mcp-companion)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## What is Browser MCP?
@@ -22,7 +22,7 @@ This lightweight Node.js app:
 ### Install
 
 ```bash
-npm install -g @browser-mcp/companion
+npm install -g browser-mcp-companion
 ```
 
 ### Run
@@ -39,7 +39,7 @@ That's it! The server starts and opens a status page.
 
 ```bash
 # Install globally
-npm install -g @browser-mcp/companion
+npm install -g browser-mcp-companion
 
 # Run from anywhere
 browser-mcp-companion
@@ -49,14 +49,14 @@ browser-mcp-companion
 
 ```bash
 # Run without installing
-npx @browser-mcp/companion
+npx browser-mcp-companion
 ```
 
 ### Option 3: Local Project
 
 ```bash
 # Add to your project
-npm install @browser-mcp/companion
+npm install browser-mcp-companion
 
 # Run via package.json script
 {

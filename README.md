@@ -3,7 +3,7 @@
 > Expose browser state to AI assistants via the Model Context Protocol
 
 [![Tests](https://img.shields.io/badge/tests-162%20passing-brightgreen)]()
-[![npm](https://img.shields.io/npm/v/@browser-mcp/companion)](https://www.npmjs.com/package/@browser-mcp/companion)
+[![npm](https://img.shields.io/npm/v/browser-mcp-companion)](https://www.npmjs.com/package/browser-mcp-companion)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3%2B-blue)]()
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -16,7 +16,7 @@ Debug and inspect your browser with AI assistants like Claude Code, Claude Deskt
 ### 1. Install Companion App
 
 ```bash
-npm install -g @browser-mcp/companion
+npm install -g browser-mcp-companion
 ```
 
 ### 2. Start Server
