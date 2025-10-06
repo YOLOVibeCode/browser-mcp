@@ -73,15 +73,53 @@ function getOS(): 'mac' | 'linux' | 'windows' {
   return 'windows';
 }
 
-// Get extension installation path (placeholder - user needs to configure)
+// Get extension installation path from user input or stored value
 function getExtensionPath(): string {
-  // TODO: This should be detected or user-configurable
-  // For now, provide instructional text
-  return '<YOUR_PROJECT_PATH>/mcp-server/dist/index.js';
+  const projectPathInput = document.getElementById('projectPath') as HTMLInputElement;
+  if (projectPathInput && projectPathInput.value.trim()) {
+    return projectPathInput.value.trim();
+  }
+
+  // Try to get from storage
+  const stored = localStorage.getItem('browserMCP_projectPath');
+  if (stored) {
+    return stored;
+  }
+
+  // Default placeholder
+  return '/path/to/browser-mcp/mcp-server/dist/index.js';
+}
+
+// Auto-detect project path (best effort)
+async function detectProjectPath() {
+  const projectPathInput = document.getElementById('projectPath') as HTMLInputElement;
+  if (!projectPathInput) return;
+
+  // Common installation paths to try
+  const commonPaths = [
+    '/Users/xcode/Documents/YOLOProjects/browser-mcp/mcp-server/dist/index.js',
+    '~/Documents/browser-mcp/mcp-server/dist/index.js',
+    '~/Projects/browser-mcp/mcp-server/dist/index.js',
+    '~/code/browser-mcp/mcp-server/dist/index.js',
+  ];
+
+  showStatus('info', '🔍 Trying to detect project path...');
+
+  // For now, just suggest the most likely path
+  const suggested = commonPaths[0];
+  projectPathInput.value = suggested;
+
+  showStatus('info', `💡 Suggested path filled in. Please verify it's correct!`);
+
+  // Store for next time
+  localStorage.setItem('browserMCP_projectPath', suggested);
+
+  // Regenerate config with new path
+  generateConfig();
 }
 
 // Navigation functions
-(window as any).nextStep = () => {
+function nextStep() {
   if (currentStep < 3) {
     const currentStepEl = document.querySelector(`.step[data-step="${currentStep}"]`);
     const currentDot = document.querySelector(`.step-dot[data-step="${currentStep}"]`);
@@ -105,9 +143,9 @@ function getExtensionPath(): string {
       generateConfig();
     }
   }
-};
+}
 
-(window as any).prevStep = () => {
+function prevStep() {
   if (currentStep > 0) {
     const currentStepEl = document.querySelector(`.step[data-step="${currentStep}"]`);
     const currentDot = document.querySelector(`.step-dot[data-step="${currentStep}"]`);
@@ -126,9 +164,9 @@ function getExtensionPath(): string {
       prevDot.classList.remove('completed');
     }
   }
-};
+}
 
-(window as any).resetWizard = () => {
+function resetWizard() {
   currentStep = 0;
   selectedIDE = null;
 
@@ -156,10 +194,10 @@ function getExtensionPath(): string {
 
   const continueBtn = document.getElementById('continueBtn') as HTMLButtonElement;
   if (continueBtn) continueBtn.disabled = true;
-};
+}
 
 // IDE selection
-(window as any).selectIDE = (ide: string) => {
+function selectIDE(ide: string) {
   selectedIDE = ide;
 
   // Update UI
@@ -174,7 +212,7 @@ function getExtensionPath(): string {
   // Enable continue button
   const continueBtn = document.getElementById('continueBtn') as HTMLButtonElement;
   if (continueBtn) continueBtn.disabled = false;
-};
+}
 
 // Generate configuration
 function generateConfig() {
@@ -183,11 +221,17 @@ function generateConfig() {
   const ideConfig = IDE_CONFIGS[selectedIDE as keyof typeof IDE_CONFIGS];
   const os = getOS();
   const extensionPath = getExtensionPath();
+  const defaultPath = ideConfig.path[os];
 
-  // Update config path
+  // Update config path displays
   const configPathEl = document.getElementById('configPath');
   if (configPathEl) {
-    configPathEl.textContent = ideConfig.path[os];
+    configPathEl.textContent = defaultPath;
+  }
+
+  const defaultConfigPathEl = document.getElementById('defaultConfigPath');
+  if (defaultConfigPathEl) {
+    defaultConfigPathEl.textContent = defaultPath;
   }
 
   // Generate config JSON
@@ -208,7 +252,7 @@ function generateConfig() {
 }
 
 // Copy configuration to clipboard
-(window as any).copyConfig = async () => {
+async function copyConfig() {
   if (!selectedIDE) return;
 
   const ideConfig = IDE_CONFIGS[selectedIDE as keyof typeof IDE_CONFIGS];
@@ -234,7 +278,7 @@ function generateConfig() {
     console.error('Failed to copy:', err);
     alert('Failed to copy to clipboard. Please copy manually.');
   }
-};
+}
 
 // Helper function to escape HTML
 function escapeHtml(text: string): string {
@@ -243,9 +287,273 @@ function escapeHtml(text: string): string {
   return div.innerHTML;
 }
 
+// Track selected configuration method
+let configMethod: 'auto' | 'manual' = 'auto';
+
+// Switch between auto and manual configuration
+function selectConfigMethod(method: 'auto' | 'manual') {
+  configMethod = method;
+
+  // Update UI
+  document.querySelectorAll('.method-option').forEach(el => {
+    if (el.getAttribute('data-method') === method) {
+      el.classList.add('selected');
+    } else {
+      el.classList.remove('selected');
+    }
+  });
+
+  // Show/hide sections
+  const autoSection = document.getElementById('autoConfigSection');
+  const manualSection = document.getElementById('manualConfigSection');
+
+  if (autoSection && manualSection) {
+    if (method === 'auto') {
+      autoSection.style.display = 'block';
+      manualSection.style.display = 'none';
+    } else {
+      autoSection.style.display = 'none';
+      manualSection.style.display = 'block';
+
+      // Generate config for manual section too
+      if (selectedIDE) {
+        const ideConfig = IDE_CONFIGS[selectedIDE as keyof typeof IDE_CONFIGS];
+        const os = getOS();
+        const extensionPath = getExtensionPath();
+
+        const configPathManual = document.getElementById('configPathManual');
+        if (configPathManual) {
+          configPathManual.textContent = ideConfig.path[os];
+        }
+
+        const config = ideConfig.config(extensionPath);
+        const configJSON = JSON.stringify(config, null, 2);
+
+        const configContentManual = document.getElementById('configContentManual');
+        if (configContentManual) {
+          configContentManual.innerHTML = `<pre>${escapeHtml(configJSON)}</pre>`;
+        }
+      }
+    }
+  }
+}
+
+// Fallback to download method if native messaging fails
+function fallbackToDownload(config: any, configPath: string, ide: string) {
+  showStatus('info', '💡 Native host not installed. Downloading config file instead...');
+
+  setTimeout(async () => {
+    const configJSON = JSON.stringify(config, null, 2);
+
+    // Download the config file
+    const blob = new Blob([configJSON], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+
+    // Determine filename based on IDE
+    let filename = 'browser-mcp-config.json';
+    if (ide === 'claude') {
+      filename = 'claude_desktop_config.json';
+    } else if (ide === 'cursor') {
+      filename = 'mcp.json';
+    } else if (ide === 'windsurf') {
+      filename = 'mcp_config.json';
+    }
+
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    // Copy path to clipboard for convenience
+    try {
+      await navigator.clipboard.writeText(configPath);
+      showStatus('success', `✅ Config downloaded! Path copied to clipboard:\n📁 ${configPath}\n\nMove the downloaded file to that location.\n\n💡 Tip: Install native host for automatic writing!`);
+    } catch {
+      showStatus('success', `✅ Config downloaded as "${filename}"!\n\nMove it to: ${configPath}\n\n💡 Tip: Install native host for automatic writing!`);
+    }
+
+    // Auto-advance after showing the message
+    setTimeout(() => {
+      nextStep();
+    }, 4000);
+  }, 500);
+}
+
+// Browse for file path
+async function browseFilePath() {
+  showStatus('info', 'Note: Chrome extensions cannot browse files directly. Please enter the path manually or use the default location.');
+}
+
+// Write configuration automatically
+async function writeConfiguration() {
+  if (!selectedIDE) return;
+
+  const statusEl = document.getElementById('writeStatus');
+  if (!statusEl) return;
+
+  try {
+    // Validate project path first
+    const extensionPath = getExtensionPath();
+    if (extensionPath.includes('/path/to/') || extensionPath.includes('<YOUR_PROJECT_PATH>')) {
+      showStatus('error', '❌ Please enter your actual Browser MCP project path first!');
+      const projectPathInput = document.getElementById('projectPath') as HTMLInputElement;
+      if (projectPathInput) {
+        projectPathInput.focus();
+        projectPathInput.style.borderColor = '#dc3545';
+        setTimeout(() => {
+          projectPathInput.style.borderColor = '';
+        }, 2000);
+      }
+      return;
+    }
+
+    showStatus('info', '🔄 Writing configuration file...');
+
+    const ideConfig = IDE_CONFIGS[selectedIDE as keyof typeof IDE_CONFIGS];
+    const os = getOS();
+    const customConfigPath = (document.getElementById('customConfigPath') as HTMLInputElement)?.value.trim();
+    const configPath = customConfigPath || ideConfig.path[os];
+
+    // Store the project path for future use
+    localStorage.setItem('browserMCP_projectPath', extensionPath);
+
+    const config = ideConfig.config(extensionPath);
+
+    // Try native messaging first (automatic file writing)
+    try {
+      const port = chrome.runtime.connectNative('com.browser_mcp.native_host');
+
+      port.onMessage.addListener((response) => {
+        if (response.success) {
+          showStatus('success', `✅ Configuration written automatically!\n📁 ${response.path}\n\nRestart your IDE to load the new configuration.`);
+
+          // Auto-advance after showing the message
+          setTimeout(() => {
+            nextStep();
+          }, 3000);
+        } else {
+          console.error('Native host error:', response.error);
+          // Fall back to download method
+          fallbackToDownload(config, configPath, selectedIDE);
+        }
+      });
+
+      port.onDisconnect.addListener(() => {
+        const error = chrome.runtime.lastError;
+        console.log('Native host not available:', error?.message);
+        // Fall back to download method
+        fallbackToDownload(config, configPath, selectedIDE);
+      });
+
+      // Send write config request
+      port.postMessage({
+        type: 'WRITE_CONFIG',
+        path: configPath,
+        content: config,
+        merge: true // Merge with existing config
+      });
+
+    } catch (err) {
+      console.log('Native messaging not available, falling back to download');
+      fallbackToDownload(config, configPath, selectedIDE);
+    }
+  } catch (err) {
+    console.error('Download config error:', err);
+    showStatus('error', `❌ Error: ${(err as Error).message}`);
+
+    // Show fallback
+    setTimeout(() => {
+      selectConfigMethod('manual');
+      showStatus('info', '💡 Please use manual copy method instead.');
+    }, 3000);
+  }
+}
+
+// Show status message
+function showStatus(type: 'success' | 'error' | 'info', message: string) {
+  const statusEl = document.getElementById('writeStatus');
+  if (!statusEl) return;
+
+  statusEl.textContent = message;
+  statusEl.className = `status-message ${type}`;
+  statusEl.style.display = 'block';
+}
+
 // Initialize on load
 document.addEventListener('DOMContentLoaded', () => {
   console.log('Browser MCP Setup Wizard loaded');
+
+  // Setup event listeners
+
+  // Step 0: Get Started button
+  const getStartedBtn = document.getElementById('getStartedBtn');
+  if (getStartedBtn) {
+    getStartedBtn.addEventListener('click', nextStep);
+  }
+
+  // Step 1: IDE selection
+  document.querySelectorAll('.ide-option').forEach(el => {
+    el.addEventListener('click', () => {
+      const ide = el.getAttribute('data-ide');
+      if (ide) selectIDE(ide);
+    });
+  });
+
+  const backBtn1 = document.getElementById('backBtn1');
+  if (backBtn1) backBtn1.addEventListener('click', prevStep);
+
+  const continueBtn = document.getElementById('continueBtn');
+  if (continueBtn) continueBtn.addEventListener('click', nextStep);
+
+  // Step 2: Config method selection
+  document.querySelectorAll('.method-option').forEach(el => {
+    el.addEventListener('click', () => {
+      const method = el.getAttribute('data-method') as 'auto' | 'manual';
+      if (method) selectConfigMethod(method);
+    });
+  });
+
+  // Project path input - regenerate config when changed
+  const projectPathInput = document.getElementById('projectPath') as HTMLInputElement;
+  if (projectPathInput) {
+    // Load saved path
+    const saved = localStorage.getItem('browserMCP_projectPath');
+    if (saved) {
+      projectPathInput.value = saved;
+    }
+
+    // Regenerate config when path changes
+    projectPathInput.addEventListener('input', () => {
+      if (selectedIDE) {
+        generateConfig();
+      }
+    });
+  }
+
+  const detectBtn = document.getElementById('detectBtn');
+  if (detectBtn) detectBtn.addEventListener('click', detectProjectPath);
+
+  const writeConfigBtn = document.getElementById('writeConfigBtn');
+  if (writeConfigBtn) writeConfigBtn.addEventListener('click', writeConfiguration);
+
+  const copyBtn = document.getElementById('copyBtn');
+  if (copyBtn) copyBtn.addEventListener('click', copyConfig);
+
+  const backBtn2 = document.getElementById('backBtn2');
+  if (backBtn2) backBtn2.addEventListener('click', prevStep);
+
+  const doneConfigBtn = document.getElementById('doneConfigBtn');
+  if (doneConfigBtn) doneConfigBtn.addEventListener('click', nextStep);
+
+  // Step 3: Complete
+  const resetBtn = document.getElementById('resetBtn');
+  if (resetBtn) resetBtn.addEventListener('click', resetWizard);
+
+  const closeBtn = document.getElementById('closeBtn');
+  if (closeBtn) closeBtn.addEventListener('click', () => window.close());
 
   // Detect current tab info
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {

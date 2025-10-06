@@ -15,8 +15,8 @@ npm test -- --run
 
 **Expected output:**
 ```
-Test Files  10 passed (10)
-Tests  138 passed (138)
+Test Files  12 passed (12)
+Tests  200 passed (200)
 ```
 
 All tests should be green! ✅
@@ -60,7 +60,7 @@ node dist/index.js
 **Expected output:**
 ```
 🚀 Starting Browser MCP Server...
-✅ Browser MCP Server v1.0.0 initialized
+✅ Browser MCP Server v1.0.1 initialized
    Capabilities: {"resources":true,"tools":true,"prompts":true}
    Registered 2 tools
    Registered 1 prompts
@@ -96,7 +96,7 @@ echo '{"jsonrpc":"2.0","id":4,"method":"prompts/list"}' | node dist/index.js
 **Expected responses** (on stdout):
 
 ```json
-{"jsonrpc":"2.0","id":1,"result":{"name":"Browser MCP Server","version":"1.0.0","capabilities":{"resources":true,"tools":true,"prompts":true}}}
+{"jsonrpc":"2.0","id":1,"result":{"name":"Browser MCP Server","version":"1.0.1","capabilities":{"resources":true,"tools":true,"prompts":true}}}
 
 {"jsonrpc":"2.0","id":2,"result":{"resources":[{"uri":"browser://tab-localhost-3000/dom/html","mimeType":"text/html","content":""},...]}}
 
@@ -371,29 +371,33 @@ open coverage/index.html
 ```
 
 **Current coverage:**
-- 138/138 tests passing ✅
+- 200/200 tests passing ✅
 - Event Bus: 8 tests
 - Port Manager: 17 tests
 - Tab Manager: 22 tests
-- Framework Detector: 21 tests
+- Session Manager: 24 tests
+- Framework Detector: 17 tests
 - CDP Adapter: 15 tests
 - MCP Server: 19 tests
 - Stdio Transport: 10 tests
 - Virtual Filesystem: 15 tests
 - Chrome Test Instance: 11 tests
+- Framework Detection Integration: 4 tests
+- **Chrome Extension Popup Logic: 38 tests** ✨
 
 ---
 
 ## ✅ Success Checklist
 
-- [ ] All 138 unit tests pass
+- [x] All 200 unit tests pass ✅
 - [ ] Build completes without errors
 - [ ] MCP server starts and listens on stdio
 - [ ] JSON-RPC requests return valid responses
 - [ ] Chrome extension loads in `chrome://extensions/`
-- [ ] Extension popup shows tab information
-- [ ] Tab activation allocates a port (3100-3199)
-- [ ] Virtual filesystem URIs are generated
+- [ ] Extension popup shows setup wizard
+- [ ] Setup wizard allows IDE selection (Claude Desktop, Cursor, Windsurf)
+- [ ] Configuration generation works for all IDEs and OSes
+- [ ] Copy to clipboard functionality works
 - [ ] (Optional) Claude Desktop shows MCP server
 - [ ] (Optional) Claude can list resources and tools
 - [ ] (Optional) Claude can execute tools
@@ -404,11 +408,12 @@ open coverage/index.html
 
 | Test | What It Proves |
 |------|---------------|
-| Unit tests (138) | All components work in isolation |
+| Unit tests (200) | All components work in isolation |
+| Popup logic tests (38) | Setup wizard business logic is correct |
 | Build | TypeScript compiles, no type errors |
 | MCP server stdio | JSON-RPC transport works |
-| Extension popup | UI and service worker communication work |
-| Tab activation | Port allocation, event emission, resource registration work |
+| Extension popup | UI and setup wizard work correctly |
+| Configuration generation | All IDEs and OSes are supported |
 | Claude Desktop | End-to-end integration with AI assistant works |
 
 ---

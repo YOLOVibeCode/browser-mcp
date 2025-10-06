@@ -5,6 +5,10 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
+    // Use happy-dom for browser extension tests
+    environmentMatchGlobs: [
+      ['extension-chromium/**/*.test.ts', 'happy-dom'],
+    ],
   },
   resolve: {
     alias: {

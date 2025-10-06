@@ -1,6 +1,6 @@
 {
   "name": "browser-mcp-family",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "Browser MCP Family - Expose browser state to AI assistants",
   "private": true,
   "workspaces": [
@@ -14,8 +14,8 @@
   "scripts": {
     "build": "npm run build --workspaces",
     "test": "vitest",
-    "test:unit": "vitest run --testPathPattern=.unit.test.ts",
-    "test:integration": "vitest run --testPathPattern=.integration.test.ts",
+    "test:unit": "vitest run --testNamePattern='unit'",
+    "test:integration": "vitest run --testNamePattern='integration'",
     "test:watch": "vitest watch",
     "test:coverage": "vitest run --coverage",
     "lint": "eslint . --ext .ts,.tsx",
