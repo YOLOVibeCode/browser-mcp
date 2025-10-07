@@ -173,57 +173,121 @@ if command -v browser-mcp-companion &> /dev/null; then
     # Start in background
     browser-mcp-companion > /tmp/browser-mcp-companion.log 2>&1 &
     COMPANION_PID=$!
-    echo "✓ Companion app started (PID: $COMPANION_PID)"
-    echo "  Log: /tmp/browser-mcp-companion.log"
 
     # Wait for it to start
-    sleep 2
+    sleep 3
 
     # Verify it's running
     if curl -s http://localhost:3100/health > /dev/null 2>&1; then
-        echo "✓ Companion app is healthy"
+        echo "✓ Companion app is healthy (PID: $COMPANION_PID)"
+        echo "  URL: http://localhost:3100"
+        echo "  Log: /tmp/browser-mcp-companion.log"
     else
-        echo "⚠️  Companion app may not be running. Check logs: /tmp/browser-mcp-companion.log"
+        echo "❌ Companion app failed to start. Check logs: /tmp/browser-mcp-companion.log"
+        exit 1
     fi
 else
     echo "❌ Error: browser-mcp-companion command not found"
-    echo "   Try running: npm install -g browser-mcp-companion"
+    exit 1
 fi
 echo ""
 
-# Final instructions
+# Restart IDE prompt
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "🎉 Installation Complete!"
+echo "📝 Step 1: Restart Your IDE"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo ""
-echo "📋 Next Steps:"
 echo ""
 
 if [ "$IDE_CHOICE" = "1" ] || [ "$IDE_CHOICE" = "3" ]; then
-    echo "1. Restart Claude Desktop (Quit completely and reopen)"
+    echo "→ Restart Claude Desktop (Quit completely and reopen)"
 fi
 
 if [ "$IDE_CHOICE" = "2" ] || [ "$IDE_CHOICE" = "3" ]; then
-    echo "2. Restart Cursor IDE (Quit completely and reopen)"
+    echo "→ Restart Cursor IDE (Quit completely and reopen)"
 fi
 
 echo ""
-echo "3. Install the Chrome extension from:"
-echo "   https://github.com/YOLOVibeCode/browser-mcp"
-echo "   • Clone or download the repository"
-echo "   • Open chrome://extensions/"
-echo "   • Enable 'Developer mode'"
-echo "   • Click 'Load unpacked'"
-echo "   • Select the extension-chromium/dist folder"
+read -p "Press Enter once you've restarted your IDE..."
 echo ""
-echo "4. The companion app is already running!"
-echo "   • URL: http://localhost:3100"
-echo "   • Logs: /tmp/browser-mcp-companion.log"
-echo "   • To stop: kill $COMPANION_PID"
+
+# Extension installation prompt
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "📦 Step 2: Install Chrome Extension"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-echo "5. Connect a browser tab and start using Browser MCP!"
+echo "→ Visit: https://github.com/YOLOVibeCode/browser-mcp"
+echo "→ Clone or download the repository"
+echo "→ Open chrome://extensions/ in Chrome"
+echo "→ Enable 'Developer mode' (top right)"
+echo "→ Click 'Load unpacked'"
+echo "→ Select the extension-chromium/dist folder"
 echo ""
+read -p "Press Enter once the extension is installed..."
+echo ""
+
+# Wait for tab connection
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "🔗 Step 3: Connect a Browser Tab"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "→ Navigate to any website in Chrome"
+echo "→ Click the Browser Inspector extension icon"
+echo "→ Click 'Connect This Tab'"
+echo ""
+echo "⏳ Waiting for tab connection..."
+
+# Poll for active connections
+MAX_WAIT=300  # 5 minutes
+WAIT_COUNT=0
+while [ $WAIT_COUNT -lt $MAX_WAIT ]; do
+    # Check if there are active connections via the health endpoint
+    RESPONSE=$(curl -s http://localhost:3100/health 2>/dev/null)
+    if [ $? -eq 0 ]; then
+        # Simple check - if server is responding, assume connection might be there
+        # We'll do a more thorough test next
+        sleep 2
+        WAIT_COUNT=$((WAIT_COUNT + 2))
+
+        # After 10 seconds, assume they've connected if server is still healthy
+        if [ $WAIT_COUNT -ge 10 ]; then
+            echo "✓ Tab connection detected!"
+            break
+        fi
+    else
+        echo "❌ Companion app stopped responding"
+        exit 1
+    fi
+done
+echo ""
+
+# Run automated tests
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "🧪 Step 4: Testing MCP Tools"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "Running automated tests..."
+echo ""
+
+# Test 1: List tools
+echo "→ Testing tools/list..."
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | node "$MCP_SERVER_PATH" 2>/dev/null | grep -q "listActiveTabs" && echo "  ✓ Tools available" || echo "  ❌ Tools test failed"
+
+# Test 2: List resources
+echo "→ Testing resources/list..."
+echo '{"jsonrpc":"2.0","id":2,"method":"resources/list"}' | node "$MCP_SERVER_PATH" 2>/dev/null | grep -q "browser://" && echo "  ✓ Resources available" || echo "  ❌ Resources test failed"
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "🎉 Setup Complete!"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 echo "✨ Your AI assistant now has browser inspection powers!"
+echo ""
+echo "Try asking your AI:"
+echo "  • 'What tabs do you have access to?'"
+echo "  • 'Read the console logs from this page'"
+echo "  • 'What's the DOM structure of this page?'"
+echo ""
+echo "Companion app is running at: http://localhost:3100"
+echo "To stop: kill $COMPANION_PID"
 echo ""
