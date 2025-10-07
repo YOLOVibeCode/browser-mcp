@@ -1,6 +1,6 @@
 {
   "name": "browser-mcp-companion",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "description": "Easy companion app for Browser MCP - Auto-starts MCP server for browser inspection with AI assistants",
   "type": "module",
   "main": "index.js",
