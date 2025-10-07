@@ -64,7 +64,7 @@ echo "1) Claude Desktop"
 echo "2) Cursor IDE"
 echo "3) Both"
 echo ""
-read -p "Enter choice (1-3): " IDE_CHOICE
+read -p "Enter choice (1-3): " IDE_CHOICE </dev/tty
 echo ""
 
 # Configure Claude Desktop
@@ -207,7 +207,7 @@ if [ "$IDE_CHOICE" = "2" ] || [ "$IDE_CHOICE" = "3" ]; then
 fi
 
 echo ""
-read -p "Press Enter once you've restarted your IDE..."
+read -p "Press Enter once you've restarted your IDE..." </dev/tty
 echo ""
 
 # Extension installation prompt
@@ -252,7 +252,7 @@ else
 fi
 
 echo ""
-read -p "Press Enter once the extension is installed..."
+read -p "Press Enter once the extension is installed..." </dev/tty
 echo ""
 
 # Wait for tab connection
