@@ -23,6 +23,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         await updateCurrentTabInfo();
         await updateActiveTabsList();
 
+        // Clear progress flags when connecting a new tab (steps 2 & 3 need to be redone)
+        await chrome.storage.local.remove(['mcpTestsCompleted', 'ideConfigured']);
+
         // Check if we came from workflow hub
         const urlParams = new URLSearchParams(window.location.search);
         const fromWorkflow = urlParams.get('from') === 'workflow';
