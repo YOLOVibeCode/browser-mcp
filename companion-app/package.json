@@ -1,6 +1,6 @@
 {
   "name": "browser-mcp-companion",
-  "version": "1.0.15",
+  "version": "1.0.16",
   "description": "Easy companion app for Browser MCP - Auto-starts MCP server for browser inspection with AI assistants",
   "type": "module",
   "main": "index.js",
@@ -8,7 +8,8 @@
     "browser-mcp-companion": "./index.js"
   },
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "prepare": "node prepare-package.js"
   },
   "keywords": [
     "mcp",
@@ -38,7 +39,9 @@
   },
   "files": [
     "index.js",
-    "README.md"
+    "README.md",
+    "prepare-package.js",
+    "mcp-server/"
   ],
   "dependencies": {
     "express": "^4.18.2",
