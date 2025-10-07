@@ -72,12 +72,24 @@ let state: ServiceWorkerState | null = null;
 function initialize(): void {
   if (state) return;
 
-  console.log('[Service Worker] Initializing Browser Inspector...');
+  const timestamp = new Date().toISOString();
+  console.log(`\n${'='.repeat(60)}`);
+  console.log(`[${timestamp}] 🚀 Initializing Browser Inspector Extension`);
+  console.log(`${'='.repeat(60)}\n`);
+
   state = new ServiceWorkerState();
-  console.log('[Service Worker] Initialized successfully');
+
+  console.log('✅ Service Worker initialized successfully');
+  console.log(`   - Event Bus: Ready`);
+  console.log(`   - Port Manager: Ready`);
+  console.log(`   - Tab Manager: Ready`);
+  console.log('');
 
   // Set initial icon to inactive state
   updateIcon(false);
+
+  console.log('🎯 Extension ready to connect tabs');
+  console.log(`${'='.repeat(60)}\n`);
 }
 
 /**
@@ -112,38 +124,83 @@ function updateIcon(hasActiveConnections: boolean): void {
  * Handle messages from popup or content scripts
  */
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log('[Service Worker] Received message:', message);
+  const timestamp = new Date().toISOString();
+  const messageId = Math.random().toString(36).substr(2, 9);
+
+  console.log(`\n${'─'.repeat(60)}`);
+  console.log(`📨 [${timestamp}] MESSAGE RECEIVED [${messageId}]`);
+  console.log(`   Type: ${message.type}`);
+  console.log(`   From: ${sender.tab ? `Tab ${sender.tab.id}` : 'Popup/Extension'}`);
+  console.log(`   Payload: ${JSON.stringify(message.payload || {}, null, 2)}`);
 
   if (!state) {
+    console.log('   ⚠️  Service worker not initialized, initializing now...');
     initialize();
   }
 
   if (message.type === 'ACTIVATE_TAB') {
+    console.log(`   ↳ Activating tab ${message.payload.tabId}...`);
     handleActivateTab(message.payload)
-      .then((result) => sendResponse({ success: true, data: result }))
-      .catch((error) => sendResponse({ success: false, error: error.message }));
+      .then((result) => {
+        console.log(`✅ [${new Date().toISOString()}] MESSAGE RESPONSE [${messageId}]`);
+        console.log(`   Status: Success`);
+        console.log(`   Result: ${JSON.stringify(result, null, 2)}`);
+        console.log(`${'─'.repeat(60)}\n`);
+        sendResponse({ success: true, data: result });
+      })
+      .catch((error) => {
+        console.error(`❌ [${new Date().toISOString()}] MESSAGE ERROR [${messageId}]`);
+        console.error(`   Error: ${error.message}`);
+        console.error(`   Stack: ${error.stack || 'No stack trace'}`);
+        console.error(`${'─'.repeat(60)}\n`);
+        sendResponse({ success: false, error: error.message });
+      });
     return true; // Keep channel open for async response
   }
 
   if (message.type === 'DEACTIVATE_TAB') {
+    console.log(`   ↳ Deactivating tab ${message.payload.tabId}...`);
     handleDeactivateTab(message.payload)
-      .then(() => sendResponse({ success: true }))
-      .catch((error) => sendResponse({ success: false, error: error.message }));
+      .then(() => {
+        console.log(`✅ [${new Date().toISOString()}] MESSAGE RESPONSE [${messageId}]`);
+        console.log(`   Status: Success`);
+        console.log(`${'─'.repeat(60)}\n`);
+        sendResponse({ success: true });
+      })
+      .catch((error) => {
+        console.error(`❌ [${new Date().toISOString()}] MESSAGE ERROR [${messageId}]`);
+        console.error(`   Error: ${error.message}`);
+        console.error(`${'─'.repeat(60)}\n`);
+        sendResponse({ success: false, error: error.message });
+      });
     return true;
   }
 
   if (message.type === 'GET_TAB_INFO') {
+    console.log(`   ↳ Getting info for tab ${message.payload.tabId}...`);
     const tabInfo = state!.tabManager.getTabInfo(message.payload.tabId);
+    console.log(`✅ [${new Date().toISOString()}] MESSAGE RESPONSE [${messageId}]`);
+    console.log(`   Status: Success`);
+    console.log(`   Tab Info: ${tabInfo ? 'Found' : 'Not found'}`);
+    console.log(`${'─'.repeat(60)}\n`);
     sendResponse({ success: true, data: tabInfo });
     return false;
   }
 
   if (message.type === 'GET_ALL_ACTIVE_TABS') {
+    console.log(`   ↳ Getting all active tabs...`);
     const tabs = state!.tabManager.getAllActiveTabs();
+    console.log(`✅ [${new Date().toISOString()}] MESSAGE RESPONSE [${messageId}]`);
+    console.log(`   Status: Success`);
+    console.log(`   Active Tabs: ${tabs.length}`);
+    console.log(`${'─'.repeat(60)}\n`);
     sendResponse({ success: true, data: tabs });
     return false;
   }
 
+  console.error(`❌ [${new Date().toISOString()}] MESSAGE ERROR [${messageId}]`);
+  console.error(`   Error: Unknown message type: ${message.type}`);
+  console.error(`${'─'.repeat(60)}\n`);
   sendResponse({ success: false, error: 'Unknown message type' });
   return false;
 });
@@ -156,29 +213,38 @@ async function handleActivateTab(payload: { tabId: number; url: string }): Promi
 
   const { tabId, url } = payload;
 
-  // Find available port
+  console.log(`   🔍 Finding available port...`);
   const port = await state.portManager.findAvailablePort();
+  console.log(`   ✓ Port found: ${port}`);
 
-  // Reserve port for tab
+  console.log(`   🔒 Reserving port ${port} for tab ${tabId}...`);
   state.portManager.reservePort(tabId, port);
+  console.log(`   ✓ Port reserved`);
 
-  // Emit PortAllocated event
+  console.log(`   📡 Emitting PortAllocated event...`);
   state.eventBus.emit('PortAllocated', {
     port,
     tabId,
     timestamp: Date.now(),
   });
 
-  // Activate tab
+  console.log(`   🎯 Activating tab in TabManager...`);
   await state.tabManager.activateTab(tabId, url, port);
+  const virtualURI = state.tabManager.getVirtualFilesystemURI(tabId);
+  console.log(`   ✓ Tab activated`);
+  console.log(`   ✓ Virtual FS URI: ${virtualURI}`);
 
-  // Update icon to show active connection
+  console.log(`   🎨 Updating extension icon...`);
   updateIcon(true);
+  console.log(`   ✓ Icon updated`);
 
-  return {
+  const result = {
     port,
-    virtualFilesystemURI: state.tabManager.getVirtualFilesystemURI(tabId),
+    virtualFilesystemURI: virtualURI,
   };
+
+  console.log(`   ✨ Tab activation complete!`);
+  return result;
 }
 
 /**
@@ -189,18 +255,23 @@ async function handleDeactivateTab(payload: { tabId: number }): Promise<void> {
 
   const { tabId } = payload;
 
-  // Deactivate tab
+  console.log(`   🔓 Deactivating tab in TabManager...`);
   await state.tabManager.deactivateTab(tabId);
+  console.log(`   ✓ Tab deactivated`);
 
-  // Release port
+  console.log(`   🔓 Releasing port for tab ${tabId}...`);
   state.portManager.releasePort(tabId);
+  console.log(`   ✓ Port released`);
 
-  // Check if any tabs are still active
   const activeTabs = state.tabManager.getAllActiveTabs();
   const hasActiveConnections = activeTabs.length > 0;
+  console.log(`   📊 Active tabs remaining: ${activeTabs.length}`);
 
-  // Update icon based on remaining connections
+  console.log(`   🎨 Updating extension icon...`);
   updateIcon(hasActiveConnections);
+  console.log(`   ✓ Icon updated`);
+
+  console.log(`   ✨ Tab deactivation complete!`);
 }
 
 /**

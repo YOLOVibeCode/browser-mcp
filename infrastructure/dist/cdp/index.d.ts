@@ -1,2 +1,2 @@
-export * from './CDPAdapter';
+export * from './CDPAdapter.js';
 //# sourceMappingURL=index.d.ts.map

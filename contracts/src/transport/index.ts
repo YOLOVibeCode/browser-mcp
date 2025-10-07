@@ -1,1 +1,1 @@
-export * from './IMCPTransport';
+export * from './IMCPTransport.js';

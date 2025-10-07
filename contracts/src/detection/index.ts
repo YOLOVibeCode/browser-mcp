@@ -1,1 +1,1 @@
-export * from './IFrameworkDetector';
+export * from './IFrameworkDetector.js';

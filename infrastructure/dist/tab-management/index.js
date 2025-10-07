@@ -1,2 +1,2 @@
-export * from './TabManager';
+export * from './TabManager.js';
 //# sourceMappingURL=index.js.map

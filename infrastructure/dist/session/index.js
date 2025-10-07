@@ -1,2 +1,2 @@
-export * from './SessionManager';
+export * from './SessionManager.js';
 //# sourceMappingURL=index.js.map

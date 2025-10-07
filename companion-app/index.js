@@ -23,7 +23,12 @@ const __dirname = dirname(__filename);
 const HEALTH_PORT = 3100;
 const MCP_SERVER_PORT = 3100;
 
+const startTime = new Date();
 console.log('\n🚀 Browser MCP Companion App\n');
+console.log('━'.repeat(50));
+console.log(`   Started at: ${startTime.toISOString()}`);
+console.log(`   Node version: ${process.version}`);
+console.log(`   Platform: ${process.platform}`);
 console.log('━'.repeat(50));
 
 // Create health check server
@@ -39,11 +44,21 @@ app.use((req, res, next) => {
 
 // Health check endpoint
 app.get('/health', (req, res) => {
+  const timestamp = new Date().toISOString();
+  const clientIP = req.ip || req.connection.remoteAddress || 'unknown';
+
+  console.log(`\n${'─'.repeat(50)}`);
+  console.log(`💓 [${timestamp}] HEALTH CHECK`);
+  console.log(`   Client IP: ${clientIP}`);
+  console.log(`   User-Agent: ${req.get('user-agent') || 'unknown'}`);
+  console.log(`   Status: OK`);
+  console.log(`${'─'.repeat(50)}\n`);
+
   res.json({
     status: 'ok',
     server: 'running',
     port: MCP_SERVER_PORT,
-    timestamp: new Date().toISOString()
+    timestamp: timestamp
   });
 });
 
@@ -97,9 +112,15 @@ app.get('/', (req, res) => {
 
 // Start health check server
 app.listen(HEALTH_PORT, () => {
+  const readyTime = new Date();
+  const startupDuration = readyTime - startTime;
+
+  console.log('');
   console.log('✅ Health check server started');
   console.log(`   Port: ${HEALTH_PORT}`);
   console.log(`   URL: http://localhost:${HEALTH_PORT}`);
+  console.log(`   Ready at: ${readyTime.toISOString()}`);
+  console.log(`   Startup time: ${startupDuration}ms`);
   console.log('');
   console.log('━'.repeat(50));
   console.log('');
@@ -112,13 +133,18 @@ app.listen(HEALTH_PORT, () => {
   console.log('');
   console.log('💡 Tip: Keep this terminal window open!');
   console.log('');
+  console.log('🔍 Debug Mode: ON');
+  console.log('   - Health check requests will be logged');
+  console.log('   - Watch this console for connection attempts');
+  console.log('');
   console.log('━'.repeat(50));
   console.log('');
 
   // Auto-open status page
   setTimeout(() => {
+    console.log('🌐 Opening status page in browser...\n');
     open(`http://localhost:${HEALTH_PORT}`).catch(() => {
-      // Ignore error if browser doesn't open
+      console.log('⚠️  Could not auto-open browser\n');
     });
   }, 1000);
 });

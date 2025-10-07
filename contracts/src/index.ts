@@ -1,23 +1,23 @@
 // Event Bus & Events
-export * from './events';
+export * from './events/index.js';
 
 // MCP Server Interfaces
-export * from './mcp-server';
+export * from './mcp-server/index.js';
 
 // Detection Interfaces
-export * from './detection';
+export * from './detection/index.js';
 
 // CDP Interfaces
-export * from './cdp';
+export * from './cdp/index.js';
 
 // Transport Interfaces
-export * from './transport';
+export * from './transport/index.js';
 
 // Virtual Filesystem Interfaces
-export * from './virtual-fs';
+export * from './virtual-fs/index.js';
 
 // Session Management Interfaces
-export * from './session';
+export * from './session/index.js';
 
 // Types
-export * from './types';
+export * from './types/index.js';

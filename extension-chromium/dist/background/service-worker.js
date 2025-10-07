@@ -426,10 +426,22 @@ var ServiceWorkerState = class {
 var state = null;
 function initialize() {
   if (state) return;
-  console.log("[Service Worker] Initializing Browser Inspector...");
+  const timestamp = (/* @__PURE__ */ new Date()).toISOString();
+  console.log(`
+${"=".repeat(60)}`);
+  console.log(`[${timestamp}] \u{1F680} Initializing Browser Inspector Extension`);
+  console.log(`${"=".repeat(60)}
+`);
   state = new ServiceWorkerState();
-  console.log("[Service Worker] Initialized successfully");
+  console.log("\u2705 Service Worker initialized successfully");
+  console.log(`   - Event Bus: Ready`);
+  console.log(`   - Port Manager: Ready`);
+  console.log(`   - Tab Manager: Ready`);
+  console.log("");
   updateIcon(false);
+  console.log("\u{1F3AF} Extension ready to connect tabs");
+  console.log(`${"=".repeat(60)}
+`);
 }
 var chromeActionAPI = {
   setBadgeText: (details) => chrome.action.setBadgeText(details),
@@ -450,56 +462,129 @@ function updateIcon(hasActiveConnections) {
   }
 }
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log("[Service Worker] Received message:", message);
+  const timestamp = (/* @__PURE__ */ new Date()).toISOString();
+  const messageId = Math.random().toString(36).substr(2, 9);
+  console.log(`
+${"\u2500".repeat(60)}`);
+  console.log(`\u{1F4E8} [${timestamp}] MESSAGE RECEIVED [${messageId}]`);
+  console.log(`   Type: ${message.type}`);
+  console.log(`   From: ${sender.tab ? `Tab ${sender.tab.id}` : "Popup/Extension"}`);
+  console.log(`   Payload: ${JSON.stringify(message.payload || {}, null, 2)}`);
   if (!state) {
+    console.log("   \u26A0\uFE0F  Service worker not initialized, initializing now...");
     initialize();
   }
   if (message.type === "ACTIVATE_TAB") {
-    handleActivateTab(message.payload).then((result) => sendResponse({ success: true, data: result })).catch((error) => sendResponse({ success: false, error: error.message }));
+    console.log(`   \u21B3 Activating tab ${message.payload.tabId}...`);
+    handleActivateTab(message.payload).then((result) => {
+      console.log(`\u2705 [${(/* @__PURE__ */ new Date()).toISOString()}] MESSAGE RESPONSE [${messageId}]`);
+      console.log(`   Status: Success`);
+      console.log(`   Result: ${JSON.stringify(result, null, 2)}`);
+      console.log(`${"\u2500".repeat(60)}
+`);
+      sendResponse({ success: true, data: result });
+    }).catch((error) => {
+      console.error(`\u274C [${(/* @__PURE__ */ new Date()).toISOString()}] MESSAGE ERROR [${messageId}]`);
+      console.error(`   Error: ${error.message}`);
+      console.error(`   Stack: ${error.stack || "No stack trace"}`);
+      console.error(`${"\u2500".repeat(60)}
+`);
+      sendResponse({ success: false, error: error.message });
+    });
     return true;
   }
   if (message.type === "DEACTIVATE_TAB") {
-    handleDeactivateTab(message.payload).then(() => sendResponse({ success: true })).catch((error) => sendResponse({ success: false, error: error.message }));
+    console.log(`   \u21B3 Deactivating tab ${message.payload.tabId}...`);
+    handleDeactivateTab(message.payload).then(() => {
+      console.log(`\u2705 [${(/* @__PURE__ */ new Date()).toISOString()}] MESSAGE RESPONSE [${messageId}]`);
+      console.log(`   Status: Success`);
+      console.log(`${"\u2500".repeat(60)}
+`);
+      sendResponse({ success: true });
+    }).catch((error) => {
+      console.error(`\u274C [${(/* @__PURE__ */ new Date()).toISOString()}] MESSAGE ERROR [${messageId}]`);
+      console.error(`   Error: ${error.message}`);
+      console.error(`${"\u2500".repeat(60)}
+`);
+      sendResponse({ success: false, error: error.message });
+    });
     return true;
   }
   if (message.type === "GET_TAB_INFO") {
+    console.log(`   \u21B3 Getting info for tab ${message.payload.tabId}...`);
     const tabInfo = state.tabManager.getTabInfo(message.payload.tabId);
+    console.log(`\u2705 [${(/* @__PURE__ */ new Date()).toISOString()}] MESSAGE RESPONSE [${messageId}]`);
+    console.log(`   Status: Success`);
+    console.log(`   Tab Info: ${tabInfo ? "Found" : "Not found"}`);
+    console.log(`${"\u2500".repeat(60)}
+`);
     sendResponse({ success: true, data: tabInfo });
     return false;
   }
   if (message.type === "GET_ALL_ACTIVE_TABS") {
+    console.log(`   \u21B3 Getting all active tabs...`);
     const tabs = state.tabManager.getAllActiveTabs();
+    console.log(`\u2705 [${(/* @__PURE__ */ new Date()).toISOString()}] MESSAGE RESPONSE [${messageId}]`);
+    console.log(`   Status: Success`);
+    console.log(`   Active Tabs: ${tabs.length}`);
+    console.log(`${"\u2500".repeat(60)}
+`);
     sendResponse({ success: true, data: tabs });
     return false;
   }
+  console.error(`\u274C [${(/* @__PURE__ */ new Date()).toISOString()}] MESSAGE ERROR [${messageId}]`);
+  console.error(`   Error: Unknown message type: ${message.type}`);
+  console.error(`${"\u2500".repeat(60)}
+`);
   sendResponse({ success: false, error: "Unknown message type" });
   return false;
 });
 async function handleActivateTab(payload) {
   if (!state) throw new Error("Service worker not initialized");
   const { tabId, url } = payload;
+  console.log(`   \u{1F50D} Finding available port...`);
   const port = await state.portManager.findAvailablePort();
+  console.log(`   \u2713 Port found: ${port}`);
+  console.log(`   \u{1F512} Reserving port ${port} for tab ${tabId}...`);
   state.portManager.reservePort(tabId, port);
+  console.log(`   \u2713 Port reserved`);
+  console.log(`   \u{1F4E1} Emitting PortAllocated event...`);
   state.eventBus.emit("PortAllocated", {
     port,
     tabId,
     timestamp: Date.now()
   });
+  console.log(`   \u{1F3AF} Activating tab in TabManager...`);
   await state.tabManager.activateTab(tabId, url, port);
+  const virtualURI = state.tabManager.getVirtualFilesystemURI(tabId);
+  console.log(`   \u2713 Tab activated`);
+  console.log(`   \u2713 Virtual FS URI: ${virtualURI}`);
+  console.log(`   \u{1F3A8} Updating extension icon...`);
   updateIcon(true);
-  return {
+  console.log(`   \u2713 Icon updated`);
+  const result = {
     port,
-    virtualFilesystemURI: state.tabManager.getVirtualFilesystemURI(tabId)
+    virtualFilesystemURI: virtualURI
   };
+  console.log(`   \u2728 Tab activation complete!`);
+  return result;
 }
 async function handleDeactivateTab(payload) {
   if (!state) throw new Error("Service worker not initialized");
   const { tabId } = payload;
+  console.log(`   \u{1F513} Deactivating tab in TabManager...`);
   await state.tabManager.deactivateTab(tabId);
+  console.log(`   \u2713 Tab deactivated`);
+  console.log(`   \u{1F513} Releasing port for tab ${tabId}...`);
   state.portManager.releasePort(tabId);
+  console.log(`   \u2713 Port released`);
   const activeTabs = state.tabManager.getAllActiveTabs();
   const hasActiveConnections = activeTabs.length > 0;
+  console.log(`   \u{1F4CA} Active tabs remaining: ${activeTabs.length}`);
+  console.log(`   \u{1F3A8} Updating extension icon...`);
   updateIcon(hasActiveConnections);
+  console.log(`   \u2713 Icon updated`);
+  console.log(`   \u2728 Tab deactivation complete!`);
 }
 initialize();
 console.log("[Service Worker] Browser Inspector loaded");

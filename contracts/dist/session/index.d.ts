@@ -1,2 +1,2 @@
-export * from './ISessionManager';
+export * from './ISessionManager.js';
 //# sourceMappingURL=index.d.ts.map

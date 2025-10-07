@@ -1,1 +1,1 @@
-export * from './VirtualFilesystemProvider';
+export * from './VirtualFilesystemProvider.js';

@@ -1,1 +1,1 @@
-export * from './EventEmitterBus';
+export * from './EventEmitterBus.js';

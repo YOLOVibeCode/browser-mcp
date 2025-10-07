@@ -1,1 +1,1 @@
-export * from './ICDPAdapter';
+export * from './ICDPAdapter.js';

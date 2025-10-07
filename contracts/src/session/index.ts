@@ -1,1 +1,1 @@
-export * from './ISessionManager';
+export * from './ISessionManager.js';

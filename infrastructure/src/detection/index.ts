@@ -1,1 +1,1 @@
-export * from './FrameworkDetector';
+export * from './FrameworkDetector.js';

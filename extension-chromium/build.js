@@ -49,10 +49,18 @@ async function build() {
     console.log('📋 Copying static files...');
     await copyFile('manifest.json', 'dist/manifest.json');
     await copyFile('popup/popup.html', 'dist/popup/popup.html');
+    await copyFile('popup/workflow-hub.html', 'dist/popup/workflow-hub.html');
+    await copyFile('popup/workflow-hub.js', 'dist/popup/workflow-hub.js');
     await copyFile('popup/test-popup.html', 'dist/popup/test-popup.html');
     await copyFile('popup/test-popup.js', 'dist/popup/test-popup.js');
     await copyFile('popup/setup-guide.html', 'dist/popup/setup-guide.html');
     await copyFile('popup/setup-guide.js', 'dist/popup/setup-guide.js');
+    await copyFile('popup/mcp-test.html', 'dist/popup/mcp-test.html');
+    await copyFile('popup/mcp-test.js', 'dist/popup/mcp-test.js');
+    await copyFile('popup/success-guide.html', 'dist/popup/success-guide.html');
+    await copyFile('popup/success-guide.js', 'dist/popup/success-guide.js');
+    await copyFile('popup/ai-simulator.html', 'dist/popup/ai-simulator.html');
+    await copyFile('popup/ai-simulator.js', 'dist/popup/ai-simulator.js');
     console.log('✅ Static files copied\n');
 
     // Note about icons

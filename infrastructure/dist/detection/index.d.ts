@@ -1,2 +1,2 @@
-export * from './FrameworkDetector';
+export * from './FrameworkDetector.js';
 //# sourceMappingURL=index.d.ts.map

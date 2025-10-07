@@ -1,2 +1,2 @@
-export * from './IEventBus';
-export * from './EventSchemas';
+export * from './IEventBus.js';
+export * from './EventSchemas.js';

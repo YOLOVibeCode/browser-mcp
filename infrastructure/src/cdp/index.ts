@@ -1,1 +1,1 @@
-export * from './CDPAdapter';
+export * from './CDPAdapter.js';

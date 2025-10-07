@@ -11,7 +11,30 @@ Debug and inspect your browser with AI assistants like Claude Code, Claude Deskt
 
 ---
 
-## 🚀 Quick Start (2 Minutes)
+## ⚡ Quick Install (One-Liner)
+
+**Automatically configure your IDE with one command:**
+
+### Mac/Linux:
+```bash
+curl -fsSL https://raw.githubusercontent.com/yourusername/browser-mcp/main/install-mcp.sh | bash
+```
+
+### Windows (PowerShell):
+```powershell
+iwr -useb https://raw.githubusercontent.com/yourusername/browser-mcp/main/install-mcp.bat | iex
+```
+
+**What it does:** Detects your OS, verifies Node.js, configures Claude Desktop or Cursor IDE, backs up existing configs, and tests the MCP server automatically.
+
+**After running:** Install Chrome extension (see below) and start the companion app.
+
+---
+
+## 🚀 Manual Setup (2 Minutes)
+
+<details>
+<summary><strong>Click to expand manual installation steps</strong></summary>
 
 ### 1. Install Companion App
 
@@ -25,30 +48,9 @@ npm install -g browser-mcp-companion
 browser-mcp-companion
 ```
 
-### 3. Install Chrome Extension
+### 3. Configure Your IDE
 
-1. Download or clone this repository
-2. Open Chrome → `chrome://extensions/`
-3. Enable "Developer mode"
-4. Click "Load unpacked" → Select `extension-chromium/dist/`
-
-### 4. Connect a Tab
-
-1. Navigate to any website
-2. Click the Browser Inspector extension icon
-3. Click "Connect This Tab"
-
-✅ **Done!** Your browser is now connected to AI assistants.
-
----
-
-## 🤖 Use with Your Favorite AI Assistant
-
-### Claude Code
-
-Works out of the box! Just start the companion app and use the Chrome extension.
-
-### Claude Desktop
+#### Claude Desktop
 
 Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
@@ -65,13 +67,38 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 **[→ Full Claude Desktop Setup Guide](./START_HERE.md)**
 
-### Cursor
+#### Cursor
 
 See **[CURSOR_INTEGRATION.md](./CURSOR_INTEGRATION.md)** for detailed setup.
 
-### Windsurf
+#### Windsurf
 
 See **[WINDSURF_INTEGRATION.md](./WINDSURF_INTEGRATION.md)** for detailed setup.
+
+</details>
+
+---
+
+## 📦 Install Chrome Extension
+
+1. Download or clone this repository
+2. Build: `npm run build`
+3. Open Chrome → `chrome://extensions/`
+4. Enable "Developer mode"
+5. Click "Load unpacked" → Select `extension-chromium/dist/`
+
+---
+
+## 🎯 Connect a Tab
+
+1. Navigate to any website in Chrome
+2. Click the Browser Inspector extension icon
+3. Follow the 3-step workflow:
+   - **Step 1:** Connect browser tab
+   - **Step 2:** Run MCP tests (built-in)
+   - **Step 3:** Configure IDE (with one-liner or manual)
+
+✅ **Done!** Your browser is now connected to AI assistants.
 
 ---
 

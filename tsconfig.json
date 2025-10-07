@@ -16,11 +16,11 @@
     "rootDir": ".",
     "baseUrl": ".",
     "paths": {
-      "@browser-mcp/contracts": ["./contracts/src"],
-      "@browser-mcp/contracts/*": ["./contracts/src/*"],
+      "@browser-mcp/contracts": ["./contracts/dist"],
+      "@browser-mcp/contracts/*": ["./contracts/dist/*"],
       "@browser-mcp/core": ["./core/src"],
-      "@browser-mcp/infrastructure": ["./infrastructure/src"],
-      "@browser-mcp/mcp-server": ["./mcp-server/src"]
+      "@browser-mcp/infrastructure": ["./infrastructure/dist"],
+      "@browser-mcp/mcp-server": ["./mcp-server/dist"]
     },
     "types": ["node"]
   },

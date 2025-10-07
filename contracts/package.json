@@ -1,6 +1,6 @@
 {
   "name": "@browser-mcp/contracts",
-  "version": "1.0.9",
+  "version": "1.0.14",
   "description": "Immutable interface contracts for Browser MCP Family (ISP enforcement)",
   "type": "module",
   "main": "./dist/index.js",

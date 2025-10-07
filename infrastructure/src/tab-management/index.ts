@@ -1,1 +1,1 @@
-export * from './TabManager';
+export * from './TabManager.js';

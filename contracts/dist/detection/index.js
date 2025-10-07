@@ -1,2 +1,2 @@
-export * from './IFrameworkDetector';
+export * from './IFrameworkDetector.js';
 //# sourceMappingURL=index.js.map

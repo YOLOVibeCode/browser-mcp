@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Browser Inspector - AI Simulator</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 650px;
+      min-height: 600px;
+      padding: 0;
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 13px;
+      color: #333;
+      background: #f8f9fa;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-left h1 {
+      margin: 0 0 4px 0;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .header-left p {
+      margin: 0;
+      font-size: 12px;
+      opacity: 0.9;
+    }
+
+    .back-link {
+      color: white;
+      text-decoration: none;
+      font-size: 12px;
+      padding: 6px 12px;
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .back-link:hover {
+      background: rgba(255,255,255,0.1);
+    }
+
+    .content {
+      padding: 20px;
+      max-height: 700px;
+      overflow-y: auto;
+    }
+
+    .section {
+      background: white;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .section-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin: 0 0 12px 0;
+      color: #2c3e50;
+    }
+
+    .api-selector {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .api-option {
+      flex: 1;
+      padding: 16px;
+      background: #f8f9fa;
+      border: 2px solid #dee2e6;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+
+    .api-option:hover {
+      border-color: #667eea;
+      background: #f0f4ff;
+    }
+
+    .api-option.selected {
+      border-color: #667eea;
+      background: #e7edff;
+    }
+
+    .api-option-title {
+      font-weight: 700;
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+
+    .api-option-desc {
+      font-size: 11px;
+      color: #666;
+    }
+
+    .input-group {
+      margin-bottom: 16px;
+    }
+
+    .input-label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 6px;
+      font-size: 12px;
+      color: #495057;
+    }
+
+    input[type="password"], input[type="text"] {
+      width: 100%;
+      padding: 10px 12px;
+      border: 2px solid #dee2e6;
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: inherit;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      width: 100%;
+    }
+
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #5568d3;
+    }
+
+    .btn-success {
+      background: #28a745;
+      color: white;
+    }
+
+    .btn-success:hover {
+      background: #218838;
+    }
+
+    .btn-danger {
+      background: #dc3545;
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #c82333;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .info-box {
+      background: #e7f3ff;
+      border-left: 4px solid #2196f3;
+      padding: 12px;
+      margin-bottom: 16px;
+      border-radius: 4px;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .warning-box {
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 12px;
+      margin-bottom: 16px;
+      border-radius: 4px;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .success-box {
+      background: #d4edda;
+      border-left: 4px solid #28a745;
+      padding: 12px;
+      margin-bottom: 16px;
+      border-radius: 4px;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .chat-container {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+      min-height: 200px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .chat-message {
+      margin-bottom: 16px;
+      animation: fadeIn 0.3s;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .chat-message.user {
+      text-align: right;
+    }
+
+    .chat-message-content {
+      display: inline-block;
+      padding: 10px 14px;
+      border-radius: 12px;
+      max-width: 80%;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .chat-message.user .chat-message-content {
+      background: #667eea;
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+
+    .chat-message.assistant .chat-message-content {
+      background: white;
+      color: #333;
+      border: 1px solid #dee2e6;
+      border-bottom-left-radius: 4px;
+    }
+
+    .chat-message.tool .chat-message-content {
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffc107;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+    }
+
+    .chat-input-container {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .chat-input {
+      flex: 1;
+    }
+
+    .recipe-selector {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .recipe-card {
+      background: #f8f9fa;
+      border: 2px solid #dee2e6;
+      border-radius: 6px;
+      padding: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .recipe-card:hover {
+      border-color: #667eea;
+      background: #f0f4ff;
+    }
+
+    .recipe-card-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+      font-size: 12px;
+      color: #495057;
+    }
+
+    .recipe-card-prompt {
+      font-size: 11px;
+      color: #666;
+      font-style: italic;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid #f3f3f3;
+      border-top: 2px solid #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 8px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-left">
+      <h1>🤖 AI Simulator</h1>
+      <p>Test MCP tools with real AI responses</p>
+    </div>
+    <a href="success-guide.html" class="back-link">← Back</a>
+  </div>
+
+  <div class="content">
+    <!-- API Configuration Section -->
+    <div class="section" id="configSection">
+      <h3 class="section-title">🔐 Configure AI Provider</h3>
+
+      <div class="info-box">
+        <strong>Privacy First:</strong> Your API key is stored locally in your browser and only sent to the official API endpoints. It never leaves your machine otherwise.
+      </div>
+
+      <div class="api-selector">
+        <div class="api-option" data-provider="anthropic">
+          <div class="api-option-title">Anthropic Claude</div>
+          <div class="api-option-desc">Claude 3.5 Sonnet</div>
+        </div>
+        <div class="api-option selected" data-provider="openai">
+          <div class="api-option-title">OpenAI</div>
+          <div class="api-option-desc">GPT-4 Turbo</div>
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label class="input-label">API Key</label>
+        <input type="password" id="apiKeyInput" placeholder="sk-..." autocomplete="off">
+      </div>
+
+      <button class="btn btn-primary" id="saveApiKeyBtn">
+        💾 Save & Start Testing
+      </button>
+
+      <div class="warning-box" style="margin-top: 16px;">
+        <strong>⚠️ Optional:</strong> You can skip this and use the mock simulator instead. The mock shows you example responses without needing an API key.
+      </div>
+
+      <button class="btn btn-primary" id="useMockBtn" style="margin-top: 12px; background: #6c757d;">
+        🎭 Use Mock Simulator (No API Key)
+      </button>
+    </div>
+
+    <!-- Simulator Section (Hidden Initially) -->
+    <div class="section" id="simulatorSection" style="display: none;">
+      <h3 class="section-title">💬 AI Chat Simulator</h3>
+
+      <div class="success-box" id="apiStatus">
+        <span id="apiStatusIcon">🎭</span> <strong id="apiStatusText">Using Mock Mode</strong> - No API calls will be made
+      </div>
+
+      <div class="recipe-selector">
+        <div class="recipe-card" data-recipe="list-tabs">
+          <div class="recipe-card-title">🔍 List Tabs</div>
+          <div class="recipe-card-prompt">"List all browser tabs"</div>
+        </div>
+        <div class="recipe-card" data-recipe="check-tools">
+          <div class="recipe-card-title">🛠️ Check Tools</div>
+          <div class="recipe-card-prompt">"What tools are available?"</div>
+        </div>
+        <div class="recipe-card" data-recipe="pin-tab">
+          <div class="recipe-card-title">📌 Pin Tab</div>
+          <div class="recipe-card-prompt">"Pin tab 1 to my session"</div>
+        </div>
+        <div class="recipe-card" data-recipe="get-resources">
+          <div class="recipe-card-title">📂 Get Resources</div>
+          <div class="recipe-card-prompt">"Show browser resources"</div>
+        </div>
+      </div>
+
+      <div class="chat-container" id="chatContainer">
+        <div class="chat-message assistant">
+          <div class="chat-message-content">
+            👋 Hello! I'm your AI assistant with access to browser inspection tools. Try asking me about your browser tabs or click a recipe above!
+          </div>
+        </div>
+      </div>
+
+      <div class="chat-input-container">
+        <input type="text" class="chat-input" id="chatInput" placeholder="Type your message...">
+        <button class="btn btn-primary" id="sendBtn" style="width: auto; padding: 10px 24px;">Send</button>
+      </div>
+
+      <div style="margin-top: 16px; display: flex; gap: 8px;">
+        <button class="btn btn-danger" id="clearChatBtn" style="width: auto; flex: 1;">Clear Chat</button>
+        <button class="btn btn-primary" id="changeApiBtn" style="width: auto; flex: 1; background: #6c757d;">Change API</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="ai-simulator.js"></script>
+</body>
+</html>

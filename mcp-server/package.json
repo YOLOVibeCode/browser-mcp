@@ -1,6 +1,6 @@
 {
   "name": "@browser-mcp/mcp-server",
-  "version": "1.0.9",
+  "version": "1.0.14",
   "description": "MCP Server for Browser Inspector",
   "type": "module",
   "main": "dist/index.js",

@@ -1,1 +1,1 @@
-export * from './StdioTransport';
+export * from './StdioTransport.js';

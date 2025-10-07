@@ -1,1 +1,1 @@
-export * from './MCPTypes';
+export * from './MCPTypes.js';

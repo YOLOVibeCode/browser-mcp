@@ -22,6 +22,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         await activateCurrentTab();
         await updateCurrentTabInfo();
         await updateActiveTabsList();
+
+        // Check if we came from workflow hub
+        const urlParams = new URLSearchParams(window.location.search);
+        const fromWorkflow = urlParams.get('from') === 'workflow';
+
+        if (fromWorkflow) {
+          // Show success message and redirect to workflow
+          await showSuccessAndRedirect('✓ Tab Connected!', 'Redirecting to next step...', 'workflow-hub.html');
+        }
       } catch (err) {
         console.error('Error:', err);
         alert('Failed: ' + err.message);
@@ -49,6 +58,42 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   setInterval(updateActiveTabsList, 2000);
 });
+
+async function showSuccessAndRedirect(title, message, redirectUrl) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+  `;
+
+  overlay.innerHTML = `
+    <div style="
+      background: white;
+      border-radius: 12px;
+      padding: 32px;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    ">
+      <div style="font-size: 48px; margin-bottom: 16px;">✓</div>
+      <h2 style="margin: 0 0 12px 0; color: #28a745; font-size: 22px;">${title}</h2>
+      <p style="margin: 0; color: #666; font-size: 14px;">${message}</p>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  await new Promise(resolve => setTimeout(resolve, 1500));
+  window.location.href = redirectUrl;
+}
+
 
 async function updateCurrentTabInfo() {
   try {
