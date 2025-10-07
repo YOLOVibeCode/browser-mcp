@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Browser MCP One-Liner Installer
-# This script automatically configures Claude Desktop or Cursor IDE with Browser MCP
+# This script automatically installs and configures Browser MCP
 
 set -e
 
@@ -20,16 +20,39 @@ esac
 echo "📍 Detected platform: $PLATFORM"
 echo ""
 
-# Get the directory where this script is located
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-MCP_SERVER_PATH="$SCRIPT_DIR/mcp-server/dist/index.js"
+# Verify Node.js is available
+echo "🔍 Verifying Node.js installation..."
+if command -v node &> /dev/null; then
+    NODE_VERSION=$(node --version)
+    echo "✓ Node.js $NODE_VERSION found"
+else
+    echo "❌ Error: Node.js not found"
+    echo "Please install Node.js from https://nodejs.org"
+    exit 1
+fi
+echo ""
+
+# Install companion app globally
+echo "📦 Installing Browser MCP Companion App..."
+if npm install -g browser-mcp-companion; then
+    echo "✓ Companion app installed"
+else
+    echo "❌ Failed to install companion app"
+    echo "Trying with sudo..."
+    sudo npm install -g browser-mcp-companion
+    echo "✓ Companion app installed (with sudo)"
+fi
+echo ""
+
+# Get the installed package path
+COMPANION_PATH=$(npm root -g)/browser-mcp-companion
+MCP_SERVER_PATH="$COMPANION_PATH/mcp-server/dist/index.js"
 
 # Verify MCP server exists
 echo "🔍 Verifying MCP server..."
 if [ ! -f "$MCP_SERVER_PATH" ]; then
     echo "❌ Error: MCP server not found at $MCP_SERVER_PATH"
-    echo ""
-    echo "Please run: npm run build"
+    echo "Installation may have failed. Please check npm logs."
     exit 1
 fi
 echo "✓ MCP server found"
@@ -138,26 +161,33 @@ case $IDE_CHOICE in
     *) echo "❌ Invalid choice"; exit 1 ;;
 esac
 
-# Verify Node.js is available
-echo "🔍 Verifying Node.js installation..."
-if command -v node &> /dev/null; then
-    NODE_VERSION=$(node --version)
-    echo "✓ Node.js $NODE_VERSION found"
-else
-    echo "❌ Error: Node.js not found"
-    echo "Please install Node.js from https://nodejs.org"
-    exit 1
-fi
-echo ""
-
 # Test MCP server
 echo "🧪 Testing MCP server..."
-if node "$MCP_SERVER_PATH" --help &> /dev/null; then
-    echo "✓ MCP server runs successfully"
+timeout 2 node "$MCP_SERVER_PATH" &> /dev/null || true
+echo "✓ MCP server verified"
+echo ""
+
+# Start companion app in background
+echo "🚀 Starting companion app..."
+if command -v browser-mcp-companion &> /dev/null; then
+    # Start in background
+    browser-mcp-companion > /tmp/browser-mcp-companion.log 2>&1 &
+    COMPANION_PID=$!
+    echo "✓ Companion app started (PID: $COMPANION_PID)"
+    echo "  Log: /tmp/browser-mcp-companion.log"
+
+    # Wait for it to start
+    sleep 2
+
+    # Verify it's running
+    if curl -s http://localhost:3100/health > /dev/null 2>&1; then
+        echo "✓ Companion app is healthy"
+    else
+        echo "⚠️  Companion app may not be running. Check logs: /tmp/browser-mcp-companion.log"
+    fi
 else
-    # Try to start it and kill it quickly to verify it works
-    timeout 2 node "$MCP_SERVER_PATH" &> /dev/null || true
-    echo "✓ MCP server verified"
+    echo "❌ Error: browser-mcp-companion command not found"
+    echo "   Try running: npm install -g browser-mcp-companion"
 fi
 echo ""
 
@@ -178,14 +208,18 @@ if [ "$IDE_CHOICE" = "2" ] || [ "$IDE_CHOICE" = "3" ]; then
 fi
 
 echo ""
-echo "3. Install the Chrome extension:"
+echo "3. Install the Chrome extension from:"
+echo "   https://github.com/YOLOVibeCode/browser-mcp"
+echo "   • Clone or download the repository"
 echo "   • Open chrome://extensions/"
 echo "   • Enable 'Developer mode'"
 echo "   • Click 'Load unpacked'"
-echo "   • Select: $SCRIPT_DIR/extension-chromium/dist"
+echo "   • Select the extension-chromium/dist folder"
 echo ""
-echo "4. Start the companion app:"
-echo "   cd $SCRIPT_DIR/companion-app && node index.js"
+echo "4. The companion app is already running!"
+echo "   • URL: http://localhost:3100"
+echo "   • Logs: /tmp/browser-mcp-companion.log"
+echo "   • To stop: kill $COMPANION_PID"
 echo ""
 echo "5. Connect a browser tab and start using Browser MCP!"
 echo ""

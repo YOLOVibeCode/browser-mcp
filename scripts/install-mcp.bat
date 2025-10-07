@@ -1,6 +1,6 @@
 @echo off
 REM Browser MCP One-Liner Installer for Windows
-REM This script automatically configures Claude Desktop or Cursor IDE with Browser MCP
+REM This script automatically installs and configures Browser MCP
 
 setlocal enabledelayedexpansion
 
@@ -10,19 +10,43 @@ echo  Browser MCP Auto-Installer (Windows)
 echo ^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=
 echo.
 
-REM Get the directory where this script is located
-set "SCRIPT_DIR=%~dp0"
-set "MCP_SERVER_PATH=%SCRIPT_DIR%mcp-server\dist\index.js"
+REM Verify Node.js is available
+echo Verifying Node.js installation...
+where node >nul 2>nul
+if errorlevel 1 (
+    echo ERROR: Node.js not found
+    echo Please install Node.js from https://nodejs.org
+    pause
+    exit /b 1
+)
+for /f "tokens=*" %%i in ('node --version') do set NODE_VERSION=%%i
+echo OK Node.js !NODE_VERSION! found
+echo.
+
+REM Install companion app globally
+echo Installing Browser MCP Companion App...
+call npm install -g browser-mcp-companion
+if errorlevel 1 (
+    echo ERROR: Failed to install companion app
+    pause
+    exit /b 1
+)
+echo OK Companion app installed
+echo.
+
+REM Get the installed package path
+for /f "tokens=*" %%i in ('npm root -g') do set NPM_ROOT=%%i
+set "COMPANION_PATH=!NPM_ROOT!\browser-mcp-companion"
+set "MCP_SERVER_PATH=!COMPANION_PATH!\mcp-server\dist\index.js"
 
 REM Convert backslashes to forward slashes for JSON
-set "MCP_SERVER_PATH_JSON=%MCP_SERVER_PATH:\=/%"
+set "MCP_SERVER_PATH_JSON=!MCP_SERVER_PATH:\=/!"
 
 REM Verify MCP server exists
 echo Verifying MCP server...
-if not exist "%MCP_SERVER_PATH%" (
-    echo ERROR: MCP server not found at %MCP_SERVER_PATH%
-    echo.
-    echo Please run: npm run build
+if not exist "!MCP_SERVER_PATH!" (
+    echo ERROR: MCP server not found at !MCP_SERVER_PATH!
+    echo Installation may have failed. Please check npm logs.
     pause
     exit /b 1
 )
