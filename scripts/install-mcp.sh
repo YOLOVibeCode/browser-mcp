@@ -215,12 +215,42 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo "📦 Step 2: Install Chrome Extension"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-echo "→ Visit: https://github.com/YOLOVibeCode/browser-mcp"
-echo "→ Clone or download the repository"
-echo "→ Open chrome://extensions/ in Chrome"
-echo "→ Enable 'Developer mode' (top right)"
-echo "→ Click 'Load unpacked'"
-echo "→ Select the extension-chromium/dist folder"
+
+# Download extension
+EXTENSION_URL="https://github.com/YOLOVibeCode/browser-mcp/releases/latest/download/browser-mcp-extension.zip"
+EXTENSION_DIR="$HOME/.browser-mcp-extension"
+
+echo "→ Downloading extension..."
+mkdir -p "$EXTENSION_DIR"
+
+if curl -L -f -s "$EXTENSION_URL" -o "$EXTENSION_DIR/extension.zip" 2>/dev/null; then
+    echo "  ✓ Downloaded"
+
+    # Extract
+    echo "→ Extracting..."
+    unzip -q -o "$EXTENSION_DIR/extension.zip" -d "$EXTENSION_DIR" 2>/dev/null
+    rm "$EXTENSION_DIR/extension.zip"
+    echo "  ✓ Extracted to: $EXTENSION_DIR"
+    echo ""
+
+    echo "Now install in Chrome:"
+    echo "→ Open chrome://extensions/ in Chrome"
+    echo "→ Enable 'Developer mode' (top right)"
+    echo "→ Click 'Load unpacked'"
+    echo "→ Select: $EXTENSION_DIR"
+else
+    echo "  ⚠️  Could not download extension automatically"
+    echo ""
+    echo "Manual installation:"
+    echo "→ Visit: https://github.com/YOLOVibeCode/browser-mcp/releases"
+    echo "→ Download browser-mcp-extension.zip"
+    echo "→ Extract it"
+    echo "→ Open chrome://extensions/ in Chrome"
+    echo "→ Enable 'Developer mode' (top right)"
+    echo "→ Click 'Load unpacked'"
+    echo "→ Select the extracted folder"
+fi
+
 echo ""
 read -p "Press Enter once the extension is installed..."
 echo ""
