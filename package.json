@@ -1,6 +1,6 @@
 {
   "name": "browser-mcp-family",
-  "version": "1.0.16",
+  "version": "1.0.17",
   "description": "Browser MCP Family - Expose browser state to AI assistants",
   "private": true,
   "workspaces": [

@@ -20,7 +20,7 @@ async function main() {
     // Initialize MCP server
     const mcpServer = new MCPServer({
         name: 'Browser MCP Server',
-        version: '1.0.16',
+        version: '1.0.17',
     });
     // Initialize stdio transport
     const transport = new StdioTransport();

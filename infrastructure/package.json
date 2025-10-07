@@ -1,6 +1,6 @@
 {
   "name": "@browser-mcp/infrastructure",
-  "version": "1.0.16",
+  "version": "1.0.17",
   "description": "Infrastructure implementations (protocol adapters, event bus, caching)",
   "type": "module",
   "main": "./dist/index.js",
