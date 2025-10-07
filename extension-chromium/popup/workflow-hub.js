@@ -32,8 +32,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Reset progress button
   document.getElementById('resetProgressBtn').addEventListener('click', async () => {
-    if (confirm('Reset workflow progress? This will clear stored completion flags but keep your actual connections.')) {
-      await chrome.storage.local.remove(['mcpTestsCompleted', 'ideConfigured']);
+    if (confirm('Reset workflow progress? This will clear the test completion flag.')) {
+      await chrome.storage.local.remove(['mcpTestsCompleted']);
       window.location.reload();
     }
   });
@@ -41,16 +41,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function checkProgress() {
   try {
-    // Check Step 1: Any tabs connected (actual state)?
-    const tabsResponse = await chrome.runtime.sendMessage({
-      type: 'GET_ALL_ACTIVE_TABS'
-    });
-
-    if (tabsResponse && tabsResponse.success && tabsResponse.data && tabsResponse.data.length > 0) {
-      markStepComplete('step1');
-    }
-
-    // Check Step 2: Is MCP server actually running (actual state)?
+    // Check Step 1: Is MCP server running (companion app installed)?
+    let step1Complete = false;
     try {
       const healthResponse = await fetch('http://localhost:3100/health', {
         method: 'GET',
@@ -60,7 +52,8 @@ async function checkProgress() {
       if (healthResponse.ok) {
         const health = await healthResponse.json();
         if (health.status === 'ok') {
-          markStepComplete('step2');
+          markStepComplete('step1');
+          step1Complete = true;
         }
       }
     } catch (err) {
@@ -68,9 +61,18 @@ async function checkProgress() {
       console.log('MCP server not detected:', err.message);
     }
 
-    // Check Step 3: IDE configured (persisted flag - user confirmation)?
-    const ideConfigured = await chrome.storage.local.get(['ideConfigured']);
-    if (ideConfigured.ideConfigured) {
+    // Check Step 2: Any tabs connected (actual state)?
+    const tabsResponse = await chrome.runtime.sendMessage({
+      type: 'GET_ALL_ACTIVE_TABS'
+    });
+
+    if (tabsResponse && tabsResponse.success && tabsResponse.data && tabsResponse.data.length > 0) {
+      markStepComplete('step2');
+    }
+
+    // Check Step 3: Tests completed (persisted flag - user ran tests)?
+    const testsCompleted = await chrome.storage.local.get(['mcpTestsCompleted']);
+    if (testsCompleted.mcpTestsCompleted) {
       markStepComplete('step3');
     }
 
