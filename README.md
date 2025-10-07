@@ -17,12 +17,12 @@ Debug and inspect your browser with AI assistants like Claude Code, Claude Deskt
 
 ### Mac/Linux:
 ```bash
-curl -fsSL https://raw.githubusercontent.com/YOLOVibeCode/browser-mcp/main/install-mcp.sh | bash
+curl -fsSL https://raw.githubusercontent.com/YOLOVibeCode/browser-mcp/main/scripts/install-mcp.sh | bash
 ```
 
 ### Windows (PowerShell):
 ```powershell
-iwr -useb https://raw.githubusercontent.com/YOLOVibeCode/browser-mcp/main/install-mcp.bat | iex
+iwr -useb https://raw.githubusercontent.com/YOLOVibeCode/browser-mcp/main/scripts/install-mcp.bat | iex
 ```
 
 **What it does:** Detects your OS, verifies Node.js, configures Claude Desktop or Cursor IDE, backs up existing configs, and tests the MCP server automatically.
