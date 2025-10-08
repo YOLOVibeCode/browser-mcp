@@ -1,5 +1,51 @@
 #!/bin/bash
 
+# Parse command line arguments
+AUTO_ACCEPT=false
+SHOW_HELP=false
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --yes|-y)
+            AUTO_ACCEPT=true
+            shift
+            ;;
+        --help|-h)
+            SHOW_HELP=true
+            shift
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Use --help for usage information"
+            exit 1
+            ;;
+    esac
+done
+
+# Show help
+if [ "$SHOW_HELP" = true ]; then
+    cat << 'EOF'
+Browser MCP Setup - Bash Installer
+
+Usage:
+  ./setup-mcp.sh [options]
+
+Options:
+  --yes, -y    Auto-accept all prompts (non-interactive mode)
+  --help, -h   Show this help message
+
+Examples:
+  ./setup-mcp.sh              # Interactive install
+  ./setup-mcp.sh --yes        # Auto-install without prompts
+
+Or run remotely:
+  curl -fsSL https://raw.githubusercontent.com/YOLOVibeCode/browser-mcp/main/scripts/setup-mcp.sh | bash
+  curl -fsSL https://raw.githubusercontent.com/YOLOVibeCode/browser-mcp/main/scripts/setup-mcp.sh | bash -s -- --yes
+
+EOF
+    exit 0
+fi
+
 # Colors
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
@@ -17,6 +63,11 @@ echo "║                                                            ║"
 echo "╚════════════════════════════════════════════════════════════╝"
 echo -e "${NC}"
 echo ""
+
+if [ "$AUTO_ACCEPT" = true ]; then
+    echo -e "${YELLOW}⚙️  Running in auto-accept mode (--yes)${NC}"
+    echo ""
+fi
 
 # Detect if we're running from curl | bash
 if [ "$0" = "bash" ]; then
@@ -149,8 +200,14 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 if command_exists browser-mcp-server; then
     INSTALLED_VERSION=$(npm list -g @rvegajr/browser-mcp-server --depth=0 2>/dev/null | grep browser-mcp-server | awk '{print $2}' | tr -d '@')
     echo -e "   ${YELLOW}⚠️  Browser MCP Server already installed (v${INSTALLED_VERSION})${NC}"
-    echo -n "   Reinstall? (y/n): "
-    read -r response
+
+    if [ "$AUTO_ACCEPT" = true ]; then
+        echo -e "   ${YELLOW}Auto-accepting: Reinstalling...${NC}"
+        response="y"
+    else
+        echo -n "   Reinstall? (y/n): "
+        read -r response
+    fi
 
     if [ "$response" = "y" ] || [ "$response" = "Y" ]; then
         echo -e "   ${BLUE}Uninstalling old version...${NC}"

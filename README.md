@@ -30,8 +30,22 @@ Browser MCP is a **pure JavaScript Chrome extension** that exposes complete brow
 
 ### ⚡ One-Command Installation
 
+**macOS / Linux:**
 ```bash
+# Interactive install
 curl -fsSL https://raw.githubusercontent.com/YOLOVibeCode/browser-mcp/main/scripts/setup-mcp.sh | bash
+
+# Auto-install (no prompts)
+curl -fsSL https://raw.githubusercontent.com/YOLOVibeCode/browser-mcp/main/scripts/setup-mcp.sh | bash -s -- --yes
+```
+
+**Windows (PowerShell):**
+```powershell
+# Interactive install
+irm https://raw.githubusercontent.com/YOLOVibeCode/browser-mcp/main/scripts/setup-mcp.ps1 | iex
+
+# Auto-install (no prompts)
+(irm https://raw.githubusercontent.com/YOLOVibeCode/browser-mcp/main/scripts/setup-mcp.ps1) + ' -Yes' | iex
 ```
 
 **That's it!** The script automatically:
@@ -242,7 +256,9 @@ npm install -g @rvegajr/browser-mcp-server
 
 ### Step 3: Configure Your IDE
 
-**Claude Desktop** (`~/Library/Application Support/Claude/claude_desktop_config.json`):
+**Claude Desktop:**
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 ```json
 {
   "mcpServers": {
@@ -253,7 +269,9 @@ npm install -g @rvegajr/browser-mcp-server
 }
 ```
 
-**Cursor** (`~/.cursor/mcp.json`):
+**Cursor:**
+- macOS/Linux: `~/.cursor/mcp.json`
+- Windows: `%USERPROFILE%\.cursor\mcp.json`
 ```json
 {
   "mcpServers": {
@@ -264,7 +282,9 @@ npm install -g @rvegajr/browser-mcp-server
 }
 ```
 
-**Windsurf** (`~/.codeium/windsurf/mcp_config.json`):
+**Windsurf:**
+- macOS/Linux: `~/.codeium/windsurf/mcp_config.json`
+- Windows: `%USERPROFILE%\.codeium\windsurf\mcp_config.json`
 ```json
 {
   "mcpServers": {
