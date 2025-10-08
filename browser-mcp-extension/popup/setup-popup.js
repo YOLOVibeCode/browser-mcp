@@ -379,7 +379,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('toolCount').textContent = `${response.toolCount || 33} Debugging Tools`;
             
             if (response.connected) {
-                document.getElementById('nativeStatus').innerHTML = `
+                document.getElementById('mcpStatus').innerHTML = `
                     <span class="status-indicator green"></span>
                     Connected
                 `;
@@ -481,17 +481,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             html += '<div class="test-result-line"><span class="check">✅</span> Extension: Running</div>';
             
             if (response && response.result) {
-                html += '<div class="test-result-line"><span class="check">✅</span> Native Host: Connected</div>';
+                html += '<div class="test-result-line"><span class="check">✅</span> MCP Server: Connected</div>';
                 html += '<div class="test-result-line"><span class="check">✅</span> Tools: ' + (response.result.tabs ? response.result.tabs.length : 0) + ' tabs found</div>';
                 html += '<div class="test-result-line"><span class="check">✅</span> All systems operational!</div>';
-                
-                document.getElementById('nativeStatus').innerHTML = `
+
+                document.getElementById('mcpStatus').innerHTML = `
                     <span class="status-indicator green"></span>
                     Connected
                 `;
                 document.getElementById('successSection').classList.remove('hidden');
             } else {
-                html += '<div class="test-result-line"><span class="cross">❌</span> Native Host: Not connected</div>';
+                html += '<div class="test-result-line"><span class="cross">❌</span> MCP Server: Not connected</div>';
                 html += '<div class="test-result-line">Please run the setup script first.</div>';
             }
             
@@ -499,8 +499,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (error) {
             resultsDiv.innerHTML = `
                 <div class="test-result-line"><span class="check">✅</span> Extension: Running</div>
-                <div class="test-result-line"><span class="cross">❌</span> Native Host: Not configured</div>
-                <div class="test-result-line">Run the setup script to enable native messaging.</div>
+                <div class="test-result-line"><span class="cross">❌</span> MCP Server: Not configured</div>
+                <div class="test-result-line">Run the setup script to install the MCP server.</div>
             `;
         }
     });
