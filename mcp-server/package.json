@@ -4,7 +4,7 @@
   "description": "MCP Server for Browser MCP - WebSocket-based bridge between IDEs and Chrome Extension",
   "main": "index.js",
   "bin": {
-    "browser-mcp-server": "./bin/browser-mcp-server"
+    "browser-mcp-server": "bin/browser-mcp-server"
   },
   "scripts": {
     "start": "node index.js",
@@ -24,7 +24,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/YOLOVibeCode/browser-mcp.git",
+    "url": "git+https://github.com/YOLOVibeCode/browser-mcp.git",
     "directory": "mcp-server"
   },
   "dependencies": {
