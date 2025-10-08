@@ -1,15 +1,16 @@
 /**
- * Browser MCP v3.0 - Service Worker
+ * Browser MCP v4.0 - Service Worker
  * Pure JavaScript - Chrome Extension compatible
- * 
+ * WebSocket-based architecture
+ *
  * This is the main entry point for the Chrome extension.
- * It initializes the MCP server, registers all tools, and handles communication.
+ * It initializes the WebSocket server, MCP server, registers all tools, and handles communication.
  */
 
 import { MCPServer } from './mcp-server.js';
 import { TabManager } from './tab-manager.js';
 import { ChromeCDP } from './adapters/chrome-cdp.js';
-import { NativeMessaging } from './adapters/native-messaging.js';
+import { WebSocketServer } from './websocket-server.js';
 import { createGetConsoleTool, createClearConsoleTool } from './tools/console-tools.js';
 import { createGetDOMTool, createQuerySelectorTool, createGetAttributesTool } from './tools/dom-tools.js';
 import { createGetNetworkTool, createGetFailedRequestsTool } from './tools/network-tools.js';
@@ -22,13 +23,13 @@ import { createDetectFrameworkTool, createGetComponentSourceTool, createGetCompo
 import { createGetComponentStateTool, createGetRenderChainTool, createTraceDataSourcesTool } from './tools/debug-tools.js';
 import { createListScriptsTool, createGetSourceMapTool, createCompareSourceTool, createResolveSourceLocationTool } from './tools/sourcemap-tools.js';
 
-console.log('[Browser MCP] Service worker starting...');
+console.log('[Browser MCP v4.0] Service worker starting...');
 
 // Initialize core components
 const mcpServer = new MCPServer();
 const tabManager = new TabManager();
 const cdp = new ChromeCDP();
-const nativeMessaging = new NativeMessaging(chrome, { autoReconnect: true });
+const wsServer = new WebSocketServer({ port: 8765 });
 
 // Register tools
 console.log('[Browser MCP] Registering ALL 33 tools...');
@@ -60,13 +61,13 @@ mcpServer.registerTool(createFindCSSRuleTool(tabManager, cdp));
 mcpServer.registerTool(createGetElementClassesTool(tabManager, cdp));
 
 // Storage tools (5)
-mcpServer.registerTool(createGetAllStorageTool(tabManager, cdp));
-mcpServer.registerTool(createGetLocalStorageTool(tabManager, cdp));
-mcpServer.registerTool(createGetSessionStorageTool(tabManager, cdp));
-mcpServer.registerTool(createGetIndexedDBTool(tabManager, cdp));
-mcpServer.registerTool(createGetCookiesTool(tabManager, cdp));
+mcpServer.registerTool(createGetAllStorageTool(tabManager));
+mcpServer.registerTool(createGetLocalStorageTool(tabManager));
+mcpServer.registerTool(createGetSessionStorageTool(tabManager));
+mcpServer.registerTool(createGetIndexedDBTool(tabManager));
+mcpServer.registerTool(createGetCookiesTool(tabManager));
 
-// DOM Query tools (4)
+// Query tools (4)
 mcpServer.registerTool(createQueryDOMTool(tabManager, cdp));
 mcpServer.registerTool(createFindByTextTool(tabManager, cdp));
 mcpServer.registerTool(createGetSiblingsTool(tabManager, cdp));
@@ -77,167 +78,84 @@ mcpServer.registerTool(createDetectFrameworkTool(tabManager, cdp));
 mcpServer.registerTool(createGetComponentSourceTool(tabManager, cdp));
 mcpServer.registerTool(createGetComponentTreeTool(tabManager, cdp));
 
-// Debug State tools (3)
+// Debug tools (3)
 mcpServer.registerTool(createGetComponentStateTool(tabManager, cdp));
 mcpServer.registerTool(createGetRenderChainTool(tabManager, cdp));
 mcpServer.registerTool(createTraceDataSourcesTool(tabManager, cdp));
 
-// Source Map tools (4)
+// Sourcemap tools (4)
 mcpServer.registerTool(createListScriptsTool(tabManager, cdp));
 mcpServer.registerTool(createGetSourceMapTool(tabManager, cdp));
 mcpServer.registerTool(createCompareSourceTool(tabManager, cdp));
 mcpServer.registerTool(createResolveSourceLocationTool(tabManager, cdp));
 
-console.log(`[Browser MCP] Registered ${mcpServer.getToolCount()} tools ✅`);
+console.log(`[Browser MCP] Registered ${mcpServer.getToolCount()} tools:`, mcpServer.getToolNames());
 
-// Start MCP server
-mcpServer.start();
+// Setup WebSocket message handler
+wsServer.onMessage(async (message, socketId) => {
+  console.log('[Browser MCP] Received MCP request:', {
+    method: message.method,
+    id: message.id,
+    from: `socket-${socketId}`
+  });
 
-// Track Chrome tabs
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (changeInfo.status === 'complete' && tab.url) {
-    console.log(`[Browser MCP] Tab updated: ${tabId} - ${tab.url}`);
-    tabManager.registerTab(tabId, tab.url);
-  }
-});
-
-chrome.tabs.onRemoved.addListener((tabId) => {
-  console.log(`[Browser MCP] Tab removed: ${tabId}`);
-  tabManager.unregisterTab(tabId);
-  cdp.detach(tabId).catch(err => console.warn(`Failed to detach from tab ${tabId}:`, err));
-});
-
-// Get existing tabs on startup
-chrome.tabs.query({}, (tabs) => {
-  for (const tab of tabs) {
-    if (tab.url) {
-      tabManager.registerTab(tab.id, tab.url);
-    }
-  }
-  console.log(`[Browser MCP] Tracking ${tabManager.getAllTabs().length} tabs`);
-});
-
-// Native Messaging Communication
-/**
- * Connect to native messaging host
- */
-async function connectNativeHost() {
   try {
-    await nativeMessaging.connect('com.browser_mcp.host');
-    
-    // Handle incoming messages from IDE
-    nativeMessaging.onMessage(async (message) => {
-      console.log('[Browser MCP] Received message from IDE:', message);
-      
-      try {
-        // Handle MCP request
-        const response = await mcpServer.handleRequest(message);
-        
-        // Send response back to IDE
-        await nativeMessaging.sendMessage(response);
-      } catch (error) {
-        console.error('[Browser MCP] Error handling request:', error);
-        
-        // Send error response
-        await nativeMessaging.sendMessage({
-          jsonrpc: '2.0',
-          id: message.id || null,
-          error: {
-            code: -32603,
-            message: 'Internal error',
-            data: error.message
-          }
-        });
-      }
+    // Handle MCP request
+    const response = await mcpServer.handleRequest(message);
+
+    // Send response back via WebSocket
+    wsServer.sendMessage(socketId, response);
+
+    console.log('[Browser MCP] Sent MCP response:', {
+      id: response.id,
+      hasError: !!response.error
     });
-    
-    // Handle disconnect
-    nativeMessaging.onDisconnect(() => {
-      console.log('[Browser MCP] Native host disconnected');
-      chrome.action.setBadgeText({ text: '?' });
-      chrome.action.setBadgeBackgroundColor({ color: '#FF9800' });
-    });
-    
-    console.log('[Browser MCP] Connected to native host');
-    
-    // Update extension icon to show connected state
-    chrome.action.setBadgeText({ text: '✓' });
-    chrome.action.setBadgeBackgroundColor({ color: '#4CAF50' });
-    
   } catch (error) {
-    console.error('[Browser MCP] Failed to connect to native host:', error);
-    console.log('[Browser MCP] Extension will still work via popup UI');
-    
-    // Update extension icon to show disconnected state
-    chrome.action.setBadgeText({ text: '?' });
-    chrome.action.setBadgeBackgroundColor({ color: '#FF9800' });
+    console.error('[Browser MCP] Error handling request:', error);
+
+    // Send error response
+    const errorResponse = {
+      jsonrpc: '2.0',
+      id: message.id || null,
+      error: {
+        code: -32603,
+        message: 'Internal error',
+        data: error.message
+      }
+    };
+
+    wsServer.sendMessage(socketId, errorResponse);
+  }
+});
+
+// Start WebSocket server
+async function startServer() {
+  try {
+    const port = await wsServer.start();
+    console.log(`[Browser MCP] WebSocket server started on port ${port}`);
+    console.log('[Browser MCP] Ready to accept connections from MCP server');
+    console.log('[Browser MCP] Waiting for browser-mcp-server to connect...');
+
+    // Start MCP server
+    await mcpServer.start();
+    console.log('[Browser MCP] MCP server initialized with 33 tools');
+  } catch (error) {
+    console.error('[Browser MCP] Failed to start server:', error);
   }
 }
 
-// Connect to native host on startup
-connectNativeHost();
-
-// Handle installation
+// Handle extension installation
 chrome.runtime.onInstalled.addListener((details) => {
   console.log('[Browser MCP] Extension installed/updated:', details.reason);
-  
-  if (details.reason === 'install') {
-    // Open welcome page or setup guide
-    chrome.tabs.create({
-      url: chrome.runtime.getURL('popup/popup.html')
-    });
-  }
+  startServer();
 });
 
-// Handle extension icon click (for testing without IDE)
-chrome.action.onClicked.addListener(async (tab) => {
-  console.log('[Browser MCP] Extension icon clicked');
-  
-  // Open popup (this won't fire if popup is defined in manifest, but keeping for reference)
-  // chrome.action.openPopup();
-});
+// Start server on load
+startServer();
 
-// Message handler for popup/content scripts
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log('[Browser MCP] Runtime message received:', message);
-  
-  if (message.type === 'GET_STATUS') {
-    sendResponse({
-      connected: nativeMessaging.isConnected(),
-      toolCount: mcpServer.getToolCount(),
-      tabCount: tabManager.getAllTabs().length,
-      tabs: tabManager.getAllTabs(),
-      tools: mcpServer.getToolNames()
-    });
-    return true;
-  }
-  
-  if (message.type === 'TEST_TOOL') {
-    // Test a tool from popup
-    mcpServer.handleRequest({
-      jsonrpc: '2.0',
-      id: 1,
-      method: message.method,
-      params: message.params
-    }).then(response => {
-      sendResponse(response);
-    }).catch(error => {
-      sendResponse({
-        jsonrpc: '2.0',
-        id: 1,
-        error: {
-          code: -32603,
-          message: error.message
-        }
-      });
-    });
-    return true;
-  }
-});
+// Keep service worker alive
+setInterval(() => {
+  console.log('[Browser MCP] Keepalive ping - Active connections:', wsServer.getConnectionCount());
+}, 20000);
 
-console.log('[Browser MCP] Service worker initialized successfully!');
-console.log('[Browser MCP] Ready to debug! 🚀');
-
-// Export for testing
-export { mcpServer, tabManager, cdp, nativeMessaging };
-
+console.log('[Browser MCP] Service worker initialized successfully! 🚀');
