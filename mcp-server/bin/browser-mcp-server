@@ -5,13 +5,14 @@
  */
 
 const MCPServer = require('../index');
+const { version } = require('../package.json');
 
 // Parse command line arguments
 const args = process.argv.slice(2);
 
 if (args.includes('--help') || args.includes('-h')) {
   console.log(`
-Browser MCP Server v4.0.0
+Browser MCP Server v${version}
 
 Usage:
   browser-mcp-server [options]
@@ -37,7 +38,7 @@ For more information, visit:
 }
 
 if (args.includes('--version') || args.includes('-v')) {
-  console.log('4.0.0');
+  console.log(version);
   process.exit(0);
 }
 

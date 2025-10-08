@@ -6,6 +6,10 @@
 
 import { IMCPServer } from './interfaces.js';
 
+// Get version from manifest
+const manifest = chrome.runtime.getManifest();
+const VERSION = manifest.version;
+
 /**
  * @class MCPServer
  * @implements {IMCPServer}
@@ -73,7 +77,7 @@ export class MCPServer extends IMCPServer {
         protocolVersion: '2024-11-05',
         serverInfo: {
           name: 'browser-mcp',
-          version: '4.0.1'
+          version: VERSION
         },
         capabilities: {
           tools: {}
@@ -154,7 +158,7 @@ export class MCPServer extends IMCPServer {
    * @returns {Promise<void>}
    */
   async start() {
-    console.log('[MCP Server] Starting Browser MCP v4.0.1...');
+    console.log(`[MCP Server] Starting Browser MCP v${VERSION}...`);
     console.log(`[MCP Server] Registered ${this.tools.size} tools`);
   }
 

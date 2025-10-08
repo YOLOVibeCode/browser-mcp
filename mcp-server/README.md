@@ -2,7 +2,7 @@
 
 **WebSocket-based MCP Server for Browser MCP Chrome Extension**
 
-Version: 4.0.0
+Version: 4.0.1
 
 ## Overview
 

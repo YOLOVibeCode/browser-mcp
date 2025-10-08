@@ -12,6 +12,7 @@
 const StdioHandler = require('./stdio-handler');
 const WebSocketClient = require('./websocket-client');
 const MessageQueue = require('./message-queue');
+const { version } = require('./package.json');
 
 class MCPServer {
   constructor(options = {}) {
@@ -136,7 +137,7 @@ class MCPServer {
    */
   async start() {
     this.log('Starting Browser MCP Server', {
-      version: '4.0.0',
+      version: version,
       wsUrl: this.wsUrl
     });
 
