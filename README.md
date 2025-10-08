@@ -230,7 +230,7 @@ browser-mcp/
 ### Step 1: Install MCP Server
 
 ```bash
-npm install -g @yolovibecodeltd/browser-mcp-server
+npm install -g @rvegajr/browser-mcp-server
 ```
 
 ### Step 2: Load Chrome Extension
@@ -357,7 +357,7 @@ echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' | nc localhost
 npm uninstall -g browser-mcp-native-host
 
 # Install new package
-npm install -g @yolovibecodeltd/browser-mcp-server
+npm install -g @rvegajr/browser-mcp-server
 
 # Update IDE config - change command name:
 # OLD: "command": "browser-mcp-host"
@@ -404,6 +404,6 @@ MIT License - see [LICENSE](LICENSE)
 ## 🔗 Links
 
 - **GitHub**: https://github.com/YOLOVibeCode/browser-mcp
-- **NPM Package**: https://www.npmjs.com/package/@yolovibecodeltd/browser-mcp-server
+- **NPM Package**: https://www.npmjs.com/package/@rvegajr/browser-mcp-server
 - **Issues**: https://github.com/YOLOVibeCode/browser-mcp/issues
 - **MCP Protocol**: https://modelcontextprotocol.io

@@ -25,7 +25,7 @@ Browser Tabs (DOM, Network, Console, etc.)
 ### From NPM (recommended)
 
 ```bash
-npm install -g @yolovibecodeltd/browser-mcp-server
+npm install -g @rvegajr/browser-mcp-server
 ```
 
 ### From Source

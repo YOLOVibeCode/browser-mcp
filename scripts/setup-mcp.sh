@@ -147,14 +147,14 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 
 # Check if already installed
 if command_exists browser-mcp-server; then
-    INSTALLED_VERSION=$(npm list -g @yolovibecodeltd/browser-mcp-server --depth=0 2>/dev/null | grep browser-mcp-server | awk '{print $2}' | tr -d '@')
+    INSTALLED_VERSION=$(npm list -g @rvegajr/browser-mcp-server --depth=0 2>/dev/null | grep browser-mcp-server | awk '{print $2}' | tr -d '@')
     echo -e "   ${YELLOW}⚠️  Browser MCP Server already installed (v${INSTALLED_VERSION})${NC}"
     echo -n "   Reinstall? (y/n): "
     read -r response
 
     if [ "$response" = "y" ] || [ "$response" = "Y" ]; then
         echo -e "   ${BLUE}Uninstalling old version...${NC}"
-        npm uninstall -g @yolovibecodeltd/browser-mcp-server 2>&1 | grep -v "npm WARN"
+        npm uninstall -g @rvegajr/browser-mcp-server 2>&1 | grep -v "npm WARN"
     else
         echo -e "   ${GREEN}✅ Using existing installation${NC}"
         echo ""
@@ -166,7 +166,7 @@ if [ "$SKIP_NPM_INSTALL" != "true" ]; then
     echo -e "   ${BLUE}Installing via NPM...${NC}"
 
     # Install from NPM registry
-    npm install -g @yolovibecodeltd/browser-mcp-server 2>&1 | tail -5
+    npm install -g @rvegajr/browser-mcp-server 2>&1 | tail -5
 
     if [ $? -eq 0 ]; then
         echo -e "   ${GREEN}✅ Browser MCP Server installed${NC}"
