@@ -1,0 +1,10 @@
+{
+  "name": "com.browsermcp.native",
+  "description": "Browser MCP Native Messaging Host - Optimized for speed",
+  "path": "/usr/local/bin/browser-mcp-host",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://EXTENSION_ID_HERE/"
+  ]
+}
+

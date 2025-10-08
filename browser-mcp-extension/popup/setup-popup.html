@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browser MCP Setup</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 420px;
+            min-height: 500px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+        }
+
+        .container {
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .logo {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .title {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .status-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .status-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .status-label {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .status-value {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .status-indicator.green {
+            background: #4CAF50;
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+        }
+
+        .status-indicator.orange {
+            background: #FF9800;
+            box-shadow: 0 0 10px rgba(255, 152, 0, 0.5);
+        }
+
+        .status-indicator.red {
+            background: #F44336;
+            box-shadow: 0 0 10px rgba(244, 67, 54, 0.5);
+        }
+
+        .section {
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title .step-number {
+            background: rgba(255, 255, 255, 0.25);
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            margin-right: 10px;
+        }
+
+        .button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .button-primary {
+            background: #fff;
+            color: #667eea;
+        }
+
+        .button-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .button-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .button-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .button-success {
+            background: #4CAF50;
+            color: #fff;
+        }
+
+        .button-test {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .info-box {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 12px;
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+
+        .info-box.success {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid rgba(76, 175, 80, 0.4);
+        }
+
+        .info-box.warning {
+            background: rgba(255, 152, 0, 0.2);
+            border: 1px solid rgba(255, 152, 0, 0.4);
+        }
+
+        .os-detected {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .link {
+            color: #fff;
+            text-decoration: none;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .link:hover {
+            border-bottom-color: #fff;
+        }
+
+        .test-results {
+            margin-top: 10px;
+            font-size: 12px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 6px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .test-result-line {
+            margin-bottom: 5px;
+        }
+
+        .check {
+            color: #4CAF50;
+        }
+
+        .cross {
+            color: #F44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🌐</div>
+            <div class="title">Browser MCP v3.0.1</div>
+            <div class="subtitle" id="toolCount">33 Debugging Tools</div>
+            <div class="os-detected" id="osDetected">Detecting OS...</div>
+        </div>
+
+        <div class="status-card">
+            <div class="status-row">
+                <span class="status-label">Extension Status</span>
+                <span class="status-value">
+                    <span class="status-indicator green"></span>
+                    Active
+                </span>
+            </div>
+            <div class="status-row">
+                <span class="status-label">Native Host</span>
+                <span class="status-value" id="nativeStatus">
+                    <span class="status-indicator orange"></span>
+                    Not Configured
+                </span>
+            </div>
+            <div class="status-row">
+                <span class="status-label">Active Tabs</span>
+                <span class="status-value" id="tabCount">0</span>
+            </div>
+        </div>
+
+        <div class="section" id="step1">
+            <div class="section-title">
+                <span class="step-number">1</span>
+                Install Native Messaging Host
+            </div>
+            
+            <div class="info-box" id="osInfo">
+                Detected: <strong id="osName">Unknown</strong><br>
+                Choose your preferred installation method below.
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <div style="font-size: 13px; font-weight: 600; margin-bottom: 8px; opacity: 0.9;">
+                    ⚡ Quick Install (Recommended)
+                </div>
+                <div class="info-box" style="margin-bottom: 8px; font-family: monospace; font-size: 11px; word-break: break-all; user-select: all; cursor: text;" id="curlCommand">
+                    Loading...
+                </div>
+                <button class="button button-primary" id="copyCurlBtn">
+                    📋 Copy & Paste into Terminal
+                </button>
+            </div>
+
+            <div style="opacity: 0.7; font-size: 12px; margin: 12px 0; text-align: center;">
+                — OR —
+            </div>
+
+            <div style="font-size: 13px; font-weight: 600; margin-bottom: 8px; opacity: 0.9;">
+                📥 Manual Download
+            </div>
+
+            <button class="button button-secondary" id="downloadScriptBtn">
+                Download Setup Script
+            </button>
+
+            <button class="button button-secondary" id="copyScriptBtn">
+                Copy Script to Clipboard
+            </button>
+
+            <button class="button button-secondary" id="viewGithubBtn">
+                View on GitHub
+            </button>
+        </div>
+
+        <div class="section" id="step2" class="hidden">
+            <div class="section-title">
+                <span class="step-number">2</span>
+                Run the Script
+            </div>
+            
+            <div class="info-box">
+                <strong>Terminal Command:</strong><br>
+                <code id="runCommand" style="color: #fff;">Loading...</code>
+            </div>
+
+            <div class="info-box success hidden" id="scriptSuccess">
+                ✅ Script ready! Open your terminal and run the command above.
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">
+                <span class="step-number">3</span>
+                Test Connection
+            </div>
+            
+            <button class="button button-test" id="testConnectionBtn">
+                🔌 Test Native Host Connection
+            </button>
+
+            <div class="test-results hidden" id="testResults"></div>
+        </div>
+
+        <div class="section hidden" id="successSection">
+            <div class="info-box success">
+                🎉 <strong>All Set!</strong><br>
+                Your Browser MCP is ready to use. You can now debug websites from your IDE!
+            </div>
+        </div>
+    </div>
+
+    <script src="setup-popup.js"></script>
+</body>
+</html>
+

@@ -11,13 +11,36 @@ echo -e "${BLUE}"
 echo "╔════════════════════════════════════════════════════════════╗"
 echo "║                                                            ║"
 echo "║        Browser MCP - Automatic Setup Utility              ║"
+echo "║                      v3.0.3                                ║"
 echo "║                                                            ║"
 echo "╚════════════════════════════════════════════════════════════╝"
 echo -e "${NC}"
 echo ""
 
-# Get absolute project path
-PROJECT_PATH=$(cd "$(dirname "$0")" && pwd)
+# Detect if we're running from curl | bash
+if [ "$0" = "bash" ]; then
+    echo -e "${YELLOW}⚠️  Running from curl | bash - cloning repository first...${NC}"
+    echo ""
+
+    # Clone to temp directory
+    TEMP_DIR="/tmp/browser-mcp-setup-$$"
+    git clone https://github.com/YOLOVibeCode/browser-mcp.git "$TEMP_DIR" 2>&1 | tail -5
+
+    if [ ! -d "$TEMP_DIR" ]; then
+        echo -e "${RED}❌ Failed to clone repository${NC}"
+        exit 1
+    fi
+
+    cd "$TEMP_DIR"
+    PROJECT_PATH="$TEMP_DIR"
+    echo -e "${GREEN}✅ Repository cloned${NC}"
+    echo ""
+else
+    # Get absolute project path (script is in scripts/ subdirectory)
+    SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+    PROJECT_PATH=$(cd "$SCRIPT_DIR/.." && pwd)
+fi
+
 echo -e "${BLUE}📍 Project location:${NC} $PROJECT_PATH"
 echo ""
 
@@ -50,20 +73,223 @@ esac
 echo -e "${BLUE}💻 Operating System:${NC} $OS_NAME"
 echo ""
 
+# ============================================================================
+# PREREQUISITE CHECKS & INSTALLATION
+# ============================================================================
+
+echo -e "${GREEN}▶ Checking Prerequisites${NC}"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+MISSING_PREREQS=()
+INSTALL_COMMANDS=()
+
+# Function to install prerequisites
+install_prerequisites() {
+    local prereq=$1
+
+    case "$OS_NAME" in
+        macOS)
+            case "$prereq" in
+                node)
+                    echo -e "   ${BLUE}Installing Node.js via Homebrew...${NC}"
+                    if ! command -v brew &> /dev/null; then
+                        echo -e "   ${YELLOW}Installing Homebrew first...${NC}"
+                        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+                    fi
+                    brew install node
+                    ;;
+                python3)
+                    echo -e "   ${BLUE}Installing Python3 via Homebrew...${NC}"
+                    if ! command -v brew &> /dev/null; then
+                        echo -e "   ${YELLOW}Installing Homebrew first...${NC}"
+                        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+                    fi
+                    brew install python3
+                    ;;
+                git)
+                    echo -e "   ${BLUE}Installing Git via Homebrew...${NC}"
+                    if ! command -v brew &> /dev/null; then
+                        echo -e "   ${YELLOW}Installing Homebrew first...${NC}"
+                        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+                    fi
+                    brew install git
+                    ;;
+            esac
+            ;;
+
+        Linux)
+            # Detect Linux package manager
+            if command -v apt-get &> /dev/null; then
+                PKG_MANAGER="apt-get"
+                UPDATE_CMD="sudo apt-get update"
+            elif command -v yum &> /dev/null; then
+                PKG_MANAGER="yum"
+                UPDATE_CMD="sudo yum check-update"
+            elif command -v dnf &> /dev/null; then
+                PKG_MANAGER="dnf"
+                UPDATE_CMD="sudo dnf check-update"
+            elif command -v pacman &> /dev/null; then
+                PKG_MANAGER="pacman"
+                UPDATE_CMD="sudo pacman -Sy"
+            elif command -v zypper &> /dev/null; then
+                PKG_MANAGER="zypper"
+                UPDATE_CMD="sudo zypper refresh"
+            else
+                echo -e "   ${RED}❌ Could not detect package manager${NC}"
+                return 1
+            fi
+
+            case "$prereq" in
+                node)
+                    echo -e "   ${BLUE}Installing Node.js...${NC}"
+                    case "$PKG_MANAGER" in
+                        apt-get)
+                            curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+                            sudo apt-get install -y nodejs
+                            ;;
+                        yum|dnf)
+                            curl -fsSL https://rpm.nodesource.com/setup_lts.x | sudo bash -
+                            sudo $PKG_MANAGER install -y nodejs
+                            ;;
+                        pacman)
+                            sudo pacman -S --noconfirm nodejs npm
+                            ;;
+                        zypper)
+                            sudo zypper install -y nodejs npm
+                            ;;
+                    esac
+                    ;;
+                python3)
+                    echo -e "   ${BLUE}Installing Python3...${NC}"
+                    case "$PKG_MANAGER" in
+                        apt-get)
+                            sudo apt-get install -y python3 python3-pip
+                            ;;
+                        yum|dnf)
+                            sudo $PKG_MANAGER install -y python3 python3-pip
+                            ;;
+                        pacman)
+                            sudo pacman -S --noconfirm python python-pip
+                            ;;
+                        zypper)
+                            sudo zypper install -y python3 python3-pip
+                            ;;
+                    esac
+                    ;;
+                git)
+                    echo -e "   ${BLUE}Installing Git...${NC}"
+                    sudo $PKG_MANAGER install -y git
+                    ;;
+            esac
+            ;;
+
+        Windows)
+            echo -e "   ${YELLOW}⚠️  Windows detected - please install prerequisites manually:${NC}"
+            case "$prereq" in
+                node)
+                    echo "      Node.js: https://nodejs.org/en/download/"
+                    ;;
+                python3)
+                    echo "      Python3: https://www.python.org/downloads/"
+                    ;;
+                git)
+                    echo "      Git: https://git-scm.com/download/win"
+                    ;;
+            esac
+            return 1
+            ;;
+    esac
+}
+
+# Check Node.js
+if command -v node &> /dev/null; then
+    NODE_VERSION=$(node --version)
+    echo -e "   ${GREEN}✅ Node.js${NC} $NODE_VERSION"
+else
+    echo -e "   ${RED}❌ Node.js not found${NC}"
+    MISSING_PREREQS+=("node")
+fi
+
+# Check Python3
+if command -v python3 &> /dev/null; then
+    PYTHON_VERSION=$(python3 --version 2>&1)
+    echo -e "   ${GREEN}✅ Python3${NC} $PYTHON_VERSION"
+else
+    echo -e "   ${RED}❌ Python3 not found${NC}"
+    MISSING_PREREQS+=("python3")
+fi
+
+# Check Git
+if command -v git &> /dev/null; then
+    GIT_VERSION=$(git --version)
+    echo -e "   ${GREEN}✅ Git${NC} $GIT_VERSION"
+else
+    echo -e "   ${RED}❌ Git not found${NC}"
+    MISSING_PREREQS+=("git")
+fi
+
+# Check Chrome/Chromium
+if [ -d "/Applications/Google Chrome.app" ] || [ -d "/Applications/Chromium.app" ] || command -v google-chrome &> /dev/null || command -v chromium &> /dev/null || command -v chromium-browser &> /dev/null; then
+    echo -e "   ${GREEN}✅ Chrome/Chromium${NC} detected"
+else
+    echo -e "   ${YELLOW}⚠️  Chrome/Chromium not detected${NC}"
+    echo "      Install Chrome: https://www.google.com/chrome/"
+fi
+
+echo ""
+
+# Install missing prerequisites
+if [ ${#MISSING_PREREQS[@]} -gt 0 ]; then
+    echo -e "${YELLOW}⚠️  Missing prerequisites: ${MISSING_PREREQS[*]}${NC}"
+    echo ""
+
+    if [ "$OS_NAME" = "Windows" ]; then
+        echo -e "${RED}Please install the missing prerequisites manually and run this script again.${NC}"
+        exit 1
+    fi
+
+    echo -n "Install missing prerequisites automatically? (y/n): "
+    read -r response
+    echo ""
+
+    if [ "$response" = "y" ] || [ "$response" = "Y" ]; then
+        for prereq in "${MISSING_PREREQS[@]}"; do
+            install_prerequisites "$prereq"
+
+            # Verify installation
+            if command -v "$prereq" &> /dev/null || command -v "${prereq/3/}" &> /dev/null; then
+                echo -e "   ${GREEN}✅ $prereq installed successfully${NC}"
+            else
+                echo -e "   ${RED}❌ $prereq installation failed${NC}"
+                echo -e "${RED}Please install $prereq manually and run this script again.${NC}"
+                exit 1
+            fi
+        done
+        echo ""
+        echo -e "${GREEN}✅ All prerequisites installed${NC}"
+        echo ""
+    else
+        echo -e "${RED}Cannot proceed without required prerequisites.${NC}"
+        echo "Please install: ${MISSING_PREREQS[*]}"
+        exit 1
+    fi
+else
+    echo -e "${GREEN}✅ All prerequisites satisfied${NC}"
+    echo ""
+fi
+
+# ============================================================================
+# CONFIGURATION FUNCTIONS
+# ============================================================================
+
 # Function to create MCP config
 create_mcp_config() {
     local config_file=$1
     cat > "$config_file" << EOFCONFIG
 {
   "mcpServers": {
-    "browser-inspector": {
-      "command": "node",
-      "args": [
-        "$PROJECT_PATH/mcp-server/dist/index.js"
-      ],
-      "env": {
-        "NODE_ENV": "production"
-      }
+    "browser-mcp": {
+      "command": "browser-mcp-host"
     }
   }
 }
@@ -87,9 +313,9 @@ merge_config() {
     local temp_file="${config_file}.tmp"
 
     if [ -f "$config_file" ]; then
-        # Check if browser-inspector already exists
-        if grep -q "browser-inspector" "$config_file"; then
-            echo -e "   ${YELLOW}⚠️  browser-inspector already exists in config${NC}"
+        # Check if browser-mcp already exists
+        if grep -q "browser-mcp" "$config_file"; then
+            echo -e "   ${YELLOW}⚠️  browser-mcp already exists in config${NC}"
             echo -n "      Overwrite? (y/n): "
             read -r response
             if [ "$response" != "y" ] && [ "$response" != "Y" ]; then
@@ -108,17 +334,15 @@ try:
         existing = json.load(f)
 
     new_server = {
-        "browser-inspector": {
-            "command": "node",
-            "args": ["$PROJECT_PATH/mcp-server/dist/index.js"],
-            "env": {"NODE_ENV": "production"}
+        "browser-mcp": {
+            "command": "browser-mcp-host"
         }
     }
 
     if "mcpServers" not in existing:
         existing["mcpServers"] = {}
 
-    existing["mcpServers"]["browser-inspector"] = new_server["browser-inspector"]
+    existing["mcpServers"]["browser-mcp"] = new_server["browser-mcp"]
 
     with open("$temp_file", "w") as f:
         json.dump(existing, f, indent=2)
@@ -143,52 +367,61 @@ EOFPYTHON
     fi
 }
 
-# Build check
-echo -e "${GREEN}▶ Step 1: Checking Build${NC}"
+# Step 1: Install Native Messaging Host via NPM
+echo -e "${GREEN}▶ Step 1: Installing Native Messaging Host${NC}"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-if [ ! -f "$PROJECT_PATH/mcp-server/dist/index.js" ]; then
-    echo -e "${YELLOW}⚠️  MCP server not built${NC}"
-    echo ""
-    echo -n "Build now? (y/n): "
+# Check if already installed
+if command -v browser-mcp-host &> /dev/null; then
+    INSTALLED_VERSION=$(npm list -g @browser-mcp/native-host --depth=0 2>/dev/null | grep @browser-mcp/native-host | awk '{print $2}' | tr -d '@')
+    echo -e "   ${YELLOW}⚠️  Native host already installed (v${INSTALLED_VERSION})${NC}"
+    echo -n "   Reinstall? (y/n): "
     read -r response
 
     if [ "$response" = "y" ] || [ "$response" = "Y" ]; then
-        echo ""
-        echo "Building..."
-        cd "$PROJECT_PATH"
-        npm run build
-
-        if [ $? -ne 0 ]; then
-            echo -e "${RED}❌ Build failed${NC}"
-            exit 1
-        fi
-        echo -e "${GREEN}✅ Build complete${NC}"
+        echo -e "   ${BLUE}Uninstalling old version...${NC}"
+        npm uninstall -g @browser-mcp/native-host 2>&1 | grep -v "npm WARN"
     else
-        echo -e "${RED}❌ MCP server must be built first${NC}"
-        echo "   Run: npm run build"
+        echo -e "   ${GREEN}✅ Using existing installation${NC}"
+        echo ""
+        # Skip to next step
+        SKIP_NPM_INSTALL=true
+    fi
+fi
+
+if [ "$SKIP_NPM_INSTALL" != "true" ]; then
+    echo -e "   ${BLUE}Installing via NPM...${NC}"
+
+    # Install from local directory if we have it
+    if [ -d "$PROJECT_PATH/native-messaging-host/package.json" ]; then
+        cd "$PROJECT_PATH/native-messaging-host"
+        npm install -g . 2>&1 | tail -5
+    else
+        # Install from NPM registry
+        npm install -g @browser-mcp/native-host 2>&1 | tail -5
+    fi
+
+    if [ $? -eq 0 ]; then
+        echo -e "   ${GREEN}✅ Native messaging host installed${NC}"
+
+        # Verify installation
+        if command -v browser-mcp-host &> /dev/null; then
+            echo -e "   ${GREEN}✅ Command 'browser-mcp-host' is available${NC}"
+        else
+            echo -e "   ${YELLOW}⚠️  Command not found in PATH${NC}"
+            echo -e "   ${YELLOW}   You may need to restart your terminal${NC}"
+        fi
+    else
+        echo -e "   ${RED}❌ Native messaging host installation failed${NC}"
+        echo -e "   ${YELLOW}   Try manual install: npm install -g @browser-mcp/native-host${NC}"
         exit 1
     fi
-else
-    echo -e "   ${GREEN}✅ MCP server is built${NC}"
 fi
+
 echo ""
 
-# Test server
-echo -e "${GREEN}▶ Step 2: Testing MCP Server${NC}"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-
-RESPONSE=$(echo '{"jsonrpc":"2.0","id":1,"method":"initialize"}' | timeout 2 node "$PROJECT_PATH/mcp-server/dist/index.js" 2>/dev/null)
-
-if echo "$RESPONSE" | grep -q "Browser MCP Server"; then
-    echo -e "   ${GREEN}✅ Server responds correctly${NC}"
-else
-    echo -e "   ${YELLOW}⚠️  Server response unclear (may still work)${NC}"
-fi
-echo ""
-
-# Detect IDEs
-echo -e "${GREEN}▶ Step 3: Detecting IDEs${NC}"
+# Step 2: Detect IDEs
+echo -e "${GREEN}▶ Step 2: Detecting IDEs${NC}"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 FOUND_IDES=()
@@ -221,7 +454,7 @@ if [ ${#FOUND_IDES[@]} -eq 0 ]; then
     echo ""
     echo -e "${YELLOW}⚠️  No supported IDEs detected${NC}"
     echo ""
-    echo "You can still configure manually:"
+    echo "You can configure manually:"
     echo "  • Claude Desktop config: $CLAUDE_CONFIG_DIR/claude_desktop_config.json"
     echo "  • Cursor IDE config: $CURSOR_CONFIG_DIR/mcp.json"
     echo "  • Windsurf IDE config: $WINDSURF_CONFIG_DIR/mcp_config.json"
@@ -234,25 +467,22 @@ if [ ${#FOUND_IDES[@]} -eq 0 ]; then
 fi
 echo ""
 
-# Setup for each IDE
+# Step 3: Setup for each IDE
 for IDE in "${FOUND_IDES[@]}"; do
     case "$IDE" in
         claude)
-            echo -e "${GREEN}▶ Step 4a: Configuring Claude Desktop${NC}"
+            echo -e "${GREEN}▶ Step 3a: Configuring Claude Desktop${NC}"
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-            # Create directory
             mkdir -p "$CLAUDE_CONFIG_DIR"
             echo -e "   ${GREEN}✅ Created config directory${NC}"
 
             CLAUDE_CONFIG_FILE="$CLAUDE_CONFIG_DIR/claude_desktop_config.json"
 
-            # Backup if exists
             if [ -f "$CLAUDE_CONFIG_FILE" ]; then
                 backup_config "$CLAUDE_CONFIG_FILE"
             fi
 
-            # Merge or create config
             if merge_config "$CLAUDE_CONFIG_FILE"; then
                 echo -e "   ${GREEN}✅ Claude Desktop configured${NC}"
                 echo "      Config: $CLAUDE_CONFIG_FILE"
@@ -263,21 +493,18 @@ for IDE in "${FOUND_IDES[@]}"; do
             ;;
 
         cursor)
-            echo -e "${GREEN}▶ Step 4b: Configuring Cursor IDE${NC}"
+            echo -e "${GREEN}▶ Step 3b: Configuring Cursor IDE${NC}"
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-            # Create directory
             mkdir -p "$CURSOR_CONFIG_DIR"
             echo -e "   ${GREEN}✅ Created config directory${NC}"
 
             CURSOR_CONFIG_FILE="$CURSOR_CONFIG_DIR/mcp.json"
 
-            # Backup if exists
             if [ -f "$CURSOR_CONFIG_FILE" ]; then
                 backup_config "$CURSOR_CONFIG_FILE"
             fi
 
-            # Merge or create config
             if merge_config "$CURSOR_CONFIG_FILE"; then
                 echo -e "   ${GREEN}✅ Cursor IDE configured${NC}"
                 echo "      Config: $CURSOR_CONFIG_FILE"
@@ -288,21 +515,18 @@ for IDE in "${FOUND_IDES[@]}"; do
             ;;
 
         windsurf)
-            echo -e "${GREEN}▶ Step 4c: Configuring Windsurf IDE${NC}"
+            echo -e "${GREEN}▶ Step 3c: Configuring Windsurf IDE${NC}"
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-            # Create directory
             mkdir -p "$WINDSURF_CONFIG_DIR"
             echo -e "   ${GREEN}✅ Created config directory${NC}"
 
             WINDSURF_CONFIG_FILE="$WINDSURF_CONFIG_DIR/mcp_config.json"
 
-            # Backup if exists
             if [ -f "$WINDSURF_CONFIG_FILE" ]; then
                 backup_config "$WINDSURF_CONFIG_FILE"
             fi
 
-            # Merge or create config
             if merge_config "$WINDSURF_CONFIG_FILE"; then
                 echo -e "   ${GREEN}✅ Windsurf IDE configured${NC}"
                 echo "      Config: $WINDSURF_CONFIG_FILE"
@@ -314,21 +538,20 @@ for IDE in "${FOUND_IDES[@]}"; do
     esac
 done
 
-# Load Chrome Extension
-echo -e "${GREEN}▶ Step 5: Chrome Extension${NC}"
+# Step 4: Chrome Extension
+echo -e "${GREEN}▶ Step 4: Chrome Extension${NC}"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-if [ -d "$PROJECT_PATH/extension-chromium/dist" ]; then
-    echo -e "   ${GREEN}✅ Extension is built${NC}"
+if [ -d "$PROJECT_PATH/browser-mcp-extension" ]; then
+    echo -e "   ${GREEN}✅ Extension is ready${NC}"
     echo ""
     echo "   To load in Chrome:"
     echo "   1. Open: chrome://extensions/"
-    echo "   2. Enable 'Developer mode'"
+    echo "   2. Enable 'Developer mode' (top-right toggle)"
     echo "   3. Click 'Load unpacked'"
-    echo "   4. Select: $PROJECT_PATH/extension-chromium/dist/"
+    echo "   4. Select: $PROJECT_PATH/browser-mcp-extension/"
 else
-    echo -e "   ${RED}❌ Extension not built${NC}"
-    echo "   Run: npm run build"
+    echo -e "   ${RED}❌ Extension directory not found${NC}"
 fi
 echo ""
 
@@ -392,24 +615,17 @@ done
 
 echo "  ${step}. Load Chrome extension:"
 echo "     • chrome://extensions/"
-echo "     • Load unpacked: extension-chromium/dist/"
+echo "     • Load unpacked: $PROJECT_PATH/browser-mcp-extension/"
 ((step++))
 
 echo "  ${step}. Test in your IDE:"
 echo "     Ask: 'What MCP servers are available?'"
-echo "     Expected: 'browser-inspector'"
+echo "     Expected: 'browser-mcp'"
 echo ""
 
 echo -e "${GREEN}📚 Documentation:${NC}"
-echo "  • Quick Start: QUICKSTART.md"
-echo "  • Cursor Guide: CURSOR_INTEGRATION.md"
-echo "  • Testing: TESTING.md"
-echo ""
-
-echo -e "${GREEN}🧪 Test Commands:${NC}"
-echo "  ./test-quick.sh      # Quick system test"
-echo "  ./demo.sh            # Interactive demo"
-echo "  npm test -- --run    # Full test suite"
+echo "  • README: $PROJECT_PATH/README.md"
+echo "  • Extension Docs: $PROJECT_PATH/browser-mcp-extension/README.md"
 echo ""
 
 echo -e "${BLUE}✨ Ready to expose browser state to AI! ✨${NC}"

@@ -1,0 +1,38 @@
+{
+  "name": "@browser-mcp/native-host",
+  "version": "3.0.3",
+  "description": "Native Messaging Host for Browser MCP - Bridges AI assistants (Claude/Cursor) to Chrome extension",
+  "main": "host.js",
+  "bin": {
+    "browser-mcp-host": "./host.js",
+    "browser-mcp-setup": "./cli.js"
+  },
+  "scripts": {
+    "postinstall": "node postinstall.js"
+  },
+  "keywords": [
+    "mcp",
+    "native-messaging",
+    "chrome-extension",
+    "claude",
+    "cursor",
+    "browser-debugging"
+  ],
+  "author": "YOLOVibeCode",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YOLOVibeCode/browser-mcp.git",
+    "directory": "native-messaging-host"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "files": [
+    "host.js",
+    "cli.js",
+    "postinstall.js",
+    "lib/",
+    "README.md"
+  ]
+}

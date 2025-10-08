@@ -1,282 +1,325 @@
-# Browser MCP
+# 🚀 Browser MCP v3.0.3 - Pure JavaScript Chrome Extension
 
-> Expose browser state to AI assistants via the Model Context Protocol
+**AI-Powered Browser Debugging Suite for Claude Desktop, Cursor, and Windsurf**
 
-[![Tests](https://img.shields.io/badge/tests-162%20passing-brightgreen)]()
-[![npm](https://img.shields.io/npm/v/browser-mcp-companion)](https://www.npmjs.com/package/browser-mcp-companion)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.3%2B-blue)]()
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
-Debug and inspect your browser with AI assistants like Claude Code, Claude Desktop, Cursor, and Windsurf!
+[![Version](https://img.shields.io/badge/version-3.0.3-blue.svg)](https://github.com/YOLOVibeCode/browser-mcp)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Chrome Extension](https://img.shields.io/badge/chrome-extension-brightgreen.svg)]()
+[![MCP](https://img.shields.io/badge/protocol-MCP-orange.svg)]()
 
 ---
 
-## ⚡ Quick Install (One-Liner)
+## 🎯 What Is Browser MCP?
 
-**Automatically configure your IDE with one command:**
+Browser MCP is a **pure JavaScript Chrome extension** that exposes complete browser state to AI assistants through the Model Context Protocol (MCP). It provides **33 powerful debugging tools** for inspecting DOM, network, console, storage, and framework state - all accessible to Claude, Cursor, and Windsurf.
 
-### Mac/Linux:
-```bash
-curl -fsSL https://raw.githubusercontent.com/YOLOVibeCode/browser-mcp/main/scripts/install-mcp.sh | bash
-```
+### ✨ Key Features
 
-### Windows (PowerShell):
-```powershell
-iwr -useb https://raw.githubusercontent.com/YOLOVibeCode/browser-mcp/main/scripts/install-mcp.bat | iex
-```
-
-**What it does:** Detects your OS, verifies Node.js, configures Claude Desktop or Cursor IDE, backs up existing configs, and tests the MCP server automatically.
-
-**After running:** Install Chrome extension (see below) and start the companion app.
+- ✅ **Pure JavaScript** - No build step, no TypeScript compilation
+- ✅ **33 Debugging Tools** - DOM inspection, network monitoring, storage management
+- ✅ **Framework Detection** - React, Vue, Angular, Svelte, and more
+- ✅ **Native Messaging** - Communicates via stdio with AI assistants
+- ✅ **Zero Dependencies** - Self-contained Chrome extension
+- ✅ **One-Line Install** - Automatic setup script
 
 ---
 
-## 🚀 Manual Setup (2 Minutes)
+## 📦 Quick Install
 
-<details>
-<summary><strong>Click to expand manual installation steps</strong></summary>
-
-### 1. Install Companion App
+### One-Line Installation (Mac/Linux)
 
 ```bash
-npm install -g browser-mcp-companion
+curl -fsSL https://raw.githubusercontent.com/YOLOVibeCode/browser-mcp/main/scripts/setup-mcp.sh | bash
 ```
 
-### 2. Start Server
+This will:
+1. ✅ Check prerequisites (Node.js, Python3, Git, Chrome)
+2. ✅ Auto-install missing dependencies (Mac/Linux)
+3. ✅ Install native messaging host
+4. ✅ Configure your IDE (Claude/Cursor/Windsurf)
+5. ✅ Load Chrome extension
 
+**Prerequisites (auto-installed on Mac/Linux)**:
+- Node.js v16+ (for native messaging host)
+- Python 3 (for config merging)
+- Git (for cloning repository)
+- Chrome/Chromium browser
+
+### Prerequisites
+
+The setup script automatically checks and installs prerequisites on **macOS and Linux**:
+- ✅ **Node.js v16+** - Required for native messaging host
+- ✅ **Python 3** - Required for JSON config merging
+- ✅ **Git** - Required for repository cloning
+- ✅ **Chrome/Chromium** - Required browser (warning only)
+
+**Installation Methods**:
+- **macOS**: Uses Homebrew (auto-installs Homebrew if missing)
+- **Linux**: Detects package manager (apt, yum, dnf, pacman, zypper)
+- **Windows**: Provides manual download links
+
+### Manual Installation
+
+#### Step 1: Clone Repository
 ```bash
-browser-mcp-companion
+git clone https://github.com/YOLOVibeCode/browser-mcp.git
+cd browser-mcp
 ```
 
-### 3. Configure Your IDE
+#### Step 2: Load Chrome Extension
+1. Open Chrome and go to `chrome://extensions/`
+2. Enable **Developer mode** (toggle in top-right)
+3. Click **Load unpacked**
+4. Select the `browser-mcp-extension` folder
+5. ✅ Extension loaded!
 
-#### Claude Desktop
+#### Step 3: Install Native Messaging Host
+```bash
+cd native-messaging-host
 
-Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+# Mac:
+./install-mac.sh
 
+# Linux:
+./install-linux.sh
+
+# Windows:
+powershell .\install-windows.ps1
+```
+
+#### Step 4: Configure Your IDE
+
+**Claude Desktop** (`~/Library/Application Support/Claude/claude_desktop_config.json`):
 ```json
 {
   "mcpServers": {
-    "browser-inspector": {
-      "command": "node",
-      "args": ["/absolute/path/to/browser-mcp/mcp-server/dist/index.js"]
+    "browser-mcp": {
+      "command": "browser-mcp-host"
     }
   }
 }
 ```
 
-**[→ Full Claude Desktop Setup Guide](./START_HERE.md)**
+**Cursor** (`~/.cursor/mcp.json`):
+```json
+{
+  "mcpServers": {
+    "browser-mcp": {
+      "command": "browser-mcp-host"
+    }
+  }
+}
+```
 
-#### Cursor
+**Windsurf** (`~/.codeium/windsurf/mcp_config.json`):
+```json
+{
+  "mcpServers": {
+    "browser-mcp": {
+      "command": "browser-mcp-host"
+    }
+  }
+}
+```
 
-See **[CURSOR_INTEGRATION.md](./CURSOR_INTEGRATION.md)** for detailed setup.
-
-#### Windsurf
-
-See **[WINDSURF_INTEGRATION.md](./WINDSURF_INTEGRATION.md)** for detailed setup.
-
-</details>
-
----
-
-## 📦 Install Chrome Extension
-
-1. Download or clone this repository
-2. Build: `npm run build`
-3. Open Chrome → `chrome://extensions/`
-4. Enable "Developer mode"
-5. Click "Load unpacked" → Select `extension-chromium/dist/`
-
----
-
-## 🎯 Connect a Tab
-
-1. Navigate to any website in Chrome
-2. Click the Browser Inspector extension icon
-3. Follow the 3-step workflow:
-   - **Step 1:** Connect browser tab
-   - **Step 2:** Run MCP tests (built-in)
-   - **Step 3:** Configure IDE (with one-liner or manual)
-
-✅ **Done!** Your browser is now connected to AI assistants.
+#### Step 5: Restart Your IDE
+```bash
+# Quit completely (Cmd+Q) and reopen
+```
 
 ---
 
-## ✨ What Can You Do?
+## 🛠️ Available Tools (33 Total)
 
-Once connected, ask your AI assistant:
+### DOM Inspection (8 tools)
+- `getElementInfo` - Get complete element details
+- `querySelectors` - jQuery-style DOM queries
+- `getAccessibilityTree` - ARIA/a11y inspection
+- `getComputedStyles` - Full CSS cascade
+- `getElementPosition` - Layout & positioning
+- `getVisibilityInfo` - Visibility detection
+- `getDOMSnapshot` - Complete DOM tree
+- `getEventListeners` - All event handlers
 
-- "What's in the DOM of this page?"
-- "Show me all console errors"
-- "What network requests were made?"
-- "What JavaScript frameworks are detected?"  
-- "Analyze the performance of this page"
-- "Find all forms on the page"
-- "Show me the page's meta tags"
+### Network Monitoring (6 tools)
+- `getNetworkRequests` - All network activity
+- `getRequestHeaders` - HTTP headers
+- `getResponseBody` - Response content
+- `getResourceTiming` - Performance metrics
+- `getWebSocketMessages` - WebSocket traffic
+- `clearNetworkCache` - Cache management
+
+### Console & Debugging (5 tools)
+- `getConsoleLogs` - All console messages
+- `evaluateExpression` - Execute JavaScript
+- `getErrorStack` - Stack traces
+- `getPerformanceMetrics` - Core Web Vitals
+- `getMemoryUsage` - Memory profiling
+
+### Storage Management (5 tools)
+- `getLocalStorage` - localStorage inspection
+- `getSessionStorage` - sessionStorage inspection
+- `getCookies` - Cookie management
+- `getIndexedDB` - IndexedDB queries
+- `clearStorage` - Storage cleanup
+
+### Framework Detection (4 tools)
+- `detectFramework` - Identify framework
+- `getComponentState` - React/Vue state
+- `getRenderChain` - Component hierarchy
+- `traceDataSources` - Data flow tracking
+
+### Source Mapping (3 tools)
+- `resolveSourceMap` - Map deployed ↔ local code
+- `getOriginalPosition` - Source map lookup
+- `listSourceFiles` - Available source files
+
+### Tab Management (2 tools)
+- `listActiveTabs` - All browser tabs
+- `switchToTab` - Tab navigation
 
 ---
 
-## 📦 Architecture
+## 🏗️ Architecture
 
 ```
 browser-mcp/
-├── companion-app/       # NPM package - Easy server startup
-├── extension-chromium/  # Chrome extension - Browser connector
-├── mcp-server/          # MCP server - AI assistant interface
-├── contracts/           # TypeScript interfaces
-├── infrastructure/      # Core implementations
-└── test-harnesses/      # Testing infrastructure
+├── browser-mcp-extension/       # Chrome Extension (Pure JavaScript)
+│   ├── manifest.json            # Chrome Manifest V3
+│   ├── background/
+│   │   ├── service-worker.js    # Main entry point
+│   │   ├── mcp-server.js        # MCP JSON-RPC server
+│   │   ├── tab-manager.js       # Tab state management
+│   │   ├── adapters/
+│   │   │   ├── chrome-cdp.js    # Chrome Debugger Protocol
+│   │   │   └── native-messaging.js # stdio communication
+│   │   ├── tools/               # 33 debugging tools
+│   │   │   ├── console-tools.js
+│   │   │   ├── dom-tools.js
+│   │   │   ├── network-tools.js
+│   │   │   ├── framework-tools.js
+│   │   │   └── ... (11 tool files)
+│   │   └── optimization/
+│   │       ├── message-filter.js
+│   │       └── delta-compression.js
+│   ├── popup/                   # Extension UI
+│   │   ├── setup-popup.html
+│   │   ├── setup-popup.js
+│   │   └── popup.css
+│   └── tests/                   # Unit tests
+│
+├── native-messaging-host/       # Native Messaging Bridge
+│   ├── host.js                  # Node.js stdio server
+│   ├── install-mac.sh           # macOS installer
+│   ├── install-linux.sh         # Linux installer
+│   └── install-windows.ps1      # Windows installer
+│
+├── scripts/
+│   └── setup-mcp.sh             # Automatic setup script
+│
+└── releases/                    # Packaged extensions
+    └── browser-mcp-extension.zip
 ```
-
-**162 tests passing** with real browser testing via Playwright.
 
 ---
 
-## 🎯 Features
+## 🧪 Testing
 
-### For Users
-- **One-command setup** with companion app
-- **Auto-detection** of running server
-- **Step-by-step UI** in extension
-- **Works with multiple AI assistants**
+The extension includes comprehensive tests:
 
-### For Developers
-- **Test-Driven Development** (TDD methodology)
-- **ISP-compliant** architecture
-- **Real implementations** (no mocks)
-- **Comprehensive E2E tests** with Playwright
+```bash
+# Run all tests
+npm test
 
-### MCP Resources
-- `browser://tab-{host}/dom/html` - Live HTML
-- `browser://tab-{host}/console/logs` - Console messages
-- `browser://tab-{host}/network/requests` - Network activity
-- `browser://tab-{host}/metadata/frameworks` - Detected frameworks
+# Or test individual modules
+node browser-mcp-extension/tests/mcp-server.test.js
+node browser-mcp-extension/tests/chrome-cdp.test.js
+node browser-mcp-extension/tests/native-messaging.test.js
+```
 
-### MCP Tools
-- `listActiveTabs` - List connected browser tabs
-- `getTabInfo` - Get tab details
-- `pinTab` - Pin tab to session
-- `unpinTab` - Unpin tab
-- And more...
+---
+
+## 🎯 Usage Examples
+
+### Example 1: Inspect Element
+**Ask Claude/Cursor:**
+> "Show me all properties of the submit button"
+
+**Browser MCP:**
+- Uses `getElementInfo` tool
+- Returns: classes, IDs, attributes, computed styles, event listeners
+
+### Example 2: Debug Network Request
+**Ask Claude/Cursor:**
+> "What API calls happened when I clicked that button?"
+
+**Browser MCP:**
+- Uses `getNetworkRequests` tool
+- Returns: URL, method, status, headers, timing, response
+
+### Example 3: Find Component State
+**Ask Claude/Cursor:**
+> "What's the current state of the UserProfile component?"
+
+**Browser MCP:**
+- Uses `detectFramework` + `getComponentState`
+- Returns: props, state, hooks, context values
+
+---
+
+## 🔧 Troubleshooting
+
+### Extension Not Loading
+1. Check Chrome version (requires v90+)
+2. Enable Developer mode in `chrome://extensions/`
+3. Check console for errors
+
+### Native Messaging Not Working
+1. Verify host is installed: `which browser-mcp-host`
+2. Check permissions: `chmod +x native-messaging-host/host.js`
+3. Test connection: `echo '{"test":true}' | browser-mcp-host`
+
+### IDE Not Detecting MCP Server
+1. Verify config file location
+2. Restart IDE completely (Cmd+Q, then reopen)
+3. Check IDE logs for MCP errors
 
 ---
 
 ## 📚 Documentation
 
-- **[QUICKSTART.md](./QUICKSTART.md)** - 5-minute setup guide
-- **[START_HERE.md](./START_HERE.md)** - Automated setup script
-- **[CURSOR_INTEGRATION.md](./CURSOR_INTEGRATION.md)** - Cursor IDE setup
-- **[WINDSURF_INTEGRATION.md](./WINDSURF_INTEGRATION.md)** - Windsurf IDE setup
-- **[TAB_PINNING_GUIDE.md](./TAB_PINNING_GUIDE.md)** - Session management
-- **[TESTING.md](./TESTING.md)** - Comprehensive testing guide
-
----
-
-## 🧪 Development
-
-### Install Dependencies
-
-```bash
-npm install
-```
-
-### Run Tests
-
-```bash
-npm test              # All unit tests
-npm run test:e2e      # E2E tests
-```
-
-### Build
-
-```bash
-npm run build         # Build all packages
-```
-
-### Run MCP Server Manually
-
-```bash
-cd mcp-server
-npm start
-```
-
----
-
-## 📊 Test Coverage
-
-| Component | Tests | Status |
-|-----------|-------|--------|
-| EventEmitterBus | 8 | ✅ |
-| PortManager | 17 | ✅ |
-| TabManager | 22 | ✅ |
-| SessionManager | 24 | ✅ |
-| FrameworkDetector | 21 | ✅ |
-| CDPAdapter | 15 | ✅ |
-| MCPServer | 19 | ✅ |
-| StdioTransport | 10 | ✅ |
-| VirtualFilesystem | 15 | ✅ |
-| E2E Tests | 7 | ✅ |
-| **Total** | **162** | ✅ |
-
----
-
-## 🐛 Troubleshooting
-
-### Extension not loading
-- Check Chrome version (requires Manifest v3)
-- Rebuild: `cd extension-chromium && npm run build`
-- Check console for errors
-
-### Companion app won't start
-- Port 3100 in use? Kill it: `lsof -i :3100 | grep LISTEN | awk '{print $2}' | xargs kill -9`
-- Check Node.js version (requires 18+)
-
-### Extension can't connect
-- Make sure companion app is running
-- Check http://localhost:3100 in browser
-- Reload extension in Chrome
-
-### AI assistant not seeing browser
-- Check MCP server config path is absolute
-- Restart AI assistant after config change
-- Check logs in assistant's developer console
+- **Extension README**: [browser-mcp-extension/README.md](browser-mcp-extension/README.md)
+- **Native Messaging**: [native-messaging-host/OPTIMIZATIONS.md](native-messaging-host/OPTIMIZATIONS.md)
+- **Tool List**: [browser-mcp-extension/ALL_33_TOOLS_COMPLETE.md](browser-mcp-extension/ALL_33_TOOLS_COMPLETE.md)
 
 ---
 
 ## 🤝 Contributing
 
-We follow TDD methodology:
-1. Write tests first (RED)
-2. Implement to pass (GREEN)
-3. Refactor (REFACTOR)
-
-All interfaces in `contracts/` package. No mocks - use real implementations.
-
----
-
-## 📝 License
-
-MIT © Browser MCP Contributors
+Contributions welcome! Please:
+1. Fork the repository
+2. Create a feature branch
+3. Add tests for new features
+4. Submit a pull request
 
 ---
 
-## 🎊 Acknowledgments
+## 📄 License
 
-Built with:
-- TypeScript 5.3+
-- Playwright (real browser testing)
-- Vitest (fast unit testing)
-- Express (companion app server)
-- Chrome Manifest v3
-
-Follows:
-- TDD (Test-Driven Development)
-- ISP (Interface Segregation Principle)
-- SOLID principles
-- Event-driven architecture
+MIT License - see [LICENSE](LICENSE)
 
 ---
 
-**Ready to expose browser state to AI!** 🚀
+## 🌟 Why Browser MCP?
 
-[Get Started](./QUICKSTART.md) | [Documentation](./START_HERE.md) | [Report Issue](https://github.com/yourusername/browser-mcp/issues)
+- **Pure JavaScript** - No build step, instant development
+- **Chrome Native** - Uses official Chrome DevTools Protocol
+- **MCP Compatible** - Works with Claude, Cursor, Windsurf
+- **Self-Contained** - No external dependencies
+- **Production Ready** - Fully tested with 33 tools
+
+---
+
+**Made with ❤️ by [YOLOVibeCode](https://github.com/YOLOVibeCode)**
+
+**⭐ Star this repo if it helps your debugging workflow!**
