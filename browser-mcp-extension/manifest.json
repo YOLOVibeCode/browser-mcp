@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "Browser MCP v3.0.3",
-  "version": "3.0.3",
+  "name": "Browser MCP v3.0.4",
+  "version": "3.0.4",
   "description": "Ultimate Browser Debugging Suite - 33 tools for AI assistants via MCP. One-line curl install!",
   "permissions": [
     "debugger",

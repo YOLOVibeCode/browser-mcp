@@ -1,6 +1,6 @@
 {
   "name": "@browser-mcp/native-host",
-  "version": "3.0.3",
+  "version": "3.0.4",
   "description": "Native Messaging Host for Browser MCP - Bridges AI assistants (Claude/Cursor) to Chrome extension",
   "main": "host.js",
   "bin": {

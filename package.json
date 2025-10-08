@@ -1,6 +1,6 @@
 {
   "name": "browser-mcp",
-  "version": "3.0.3",
+  "version": "3.0.4",
   "description": "Browser MCP - Pure JavaScript Chrome Extension for AI-powered browser debugging",
   "private": true,
   "scripts": {

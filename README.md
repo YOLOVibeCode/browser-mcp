@@ -1,8 +1,8 @@
-# 🚀 Browser MCP v3.0.3 - Pure JavaScript Chrome Extension
+# 🚀 Browser MCP v3.0.4 - Pure JavaScript Chrome Extension
 
 **AI-Powered Browser Debugging Suite for Claude Desktop, Cursor, and Windsurf**
 
-[![Version](https://img.shields.io/badge/version-3.0.3-blue.svg)](https://github.com/YOLOVibeCode/browser-mcp)
+[![Version](https://img.shields.io/badge/version-3.0.4-blue.svg)](https://github.com/YOLOVibeCode/browser-mcp)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Chrome Extension](https://img.shields.io/badge/chrome-extension-brightgreen.svg)]()
 [![MCP](https://img.shields.io/badge/protocol-MCP-orange.svg)]()
