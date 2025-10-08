@@ -46,46 +46,44 @@ EOF
     exit 0
 fi
 
-# Colors
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-NC='\033[0m' # No Color
+# Disable colors and special characters for clean output
+GREEN=''
+BLUE=''
+YELLOW=''
+RED=''
+NC=''
 
-echo -e "${BLUE}"
-echo "╔════════════════════════════════════════════════════════════╗"
-echo "║                                                            ║"
-echo "║        Browser MCP - Automatic Setup Utility              ║"
-echo "║                      v4.0.0                                ║"
-echo "║              WebSocket Architecture                        ║"
-echo "║                                                            ║"
-echo "╚════════════════════════════════════════════════════════════╝"
-echo -e "${NC}"
+echo "============================================================"
+echo ""
+echo "        Browser MCP - Automatic Setup Utility"
+echo "                      v4.0.0"
+echo "              WebSocket Architecture"
+echo ""
+echo "============================================================"
 echo ""
 
 if [ "$AUTO_ACCEPT" = true ]; then
-    echo -e "${YELLOW}⚙️  Running in auto-accept mode (--yes)${NC}"
+    echo "Running in auto-accept mode (--yes)"
     echo ""
 fi
 
 # Detect if we're running from curl | bash
 if [ "$0" = "bash" ]; then
-    echo -e "${YELLOW}⚠️  Running from curl | bash - cloning repository first...${NC}"
+    echo "Running from curl | bash - cloning repository first..."
     echo ""
 
-    # Clone to temp directory
-    TEMP_DIR="/tmp/browser-mcp-setup-$$"
+    # Clone to Downloads directory instead of /tmp
+    TEMP_DIR="$HOME/Downloads/browser-mcp-setup"
     git clone https://github.com/YOLOVibeCode/browser-mcp.git "$TEMP_DIR" 2>&1 | tail -5
 
     if [ ! -d "$TEMP_DIR" ]; then
-        echo -e "${RED}❌ Failed to clone repository${NC}"
+        echo "ERROR: Failed to clone repository"
         exit 1
     fi
 
     cd "$TEMP_DIR"
     PROJECT_PATH="$TEMP_DIR"
-    echo -e "${GREEN}✅ Repository cloned${NC}"
+    echo "PASS: Repository cloned"
     echo ""
 else
     # Get absolute project path (script is in scripts/ subdirectory)
@@ -93,7 +91,7 @@ else
     PROJECT_PATH=$(cd "$SCRIPT_DIR/.." && pwd)
 fi
 
-echo -e "${BLUE}📍 Project location:${NC} $PROJECT_PATH"
+echo "Project location: $PROJECT_PATH"
 echo ""
 
 # Detect OS
@@ -113,7 +111,7 @@ case "$OS" in
         ;;
 esac
 
-echo -e "${BLUE}💻 Operating System:${NC} $OS_NAME"
+echo "Operating System: $OS_NAME"
 echo ""
 
 # Function to check if command exists
@@ -122,57 +120,57 @@ command_exists() {
 }
 
 # Check prerequisites
-echo -e "${GREEN}▶ Checking Prerequisites${NC}"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "▶ Checking Prerequisites"
+echo "------------------------------------------------------------"
 
 MISSING_PREREQS=()
 
 # Check Node.js
 if command_exists node; then
     NODE_VERSION=$(node --version)
-    echo -e "   ${GREEN}✅ Node.js${NC} $NODE_VERSION"
+    echo "   PASS: Node.js $NODE_VERSION"
 else
-    echo -e "   ${RED}❌ Node.js${NC} not found"
+    echo "   ERROR: Node.js not found"
     MISSING_PREREQS+=("node")
 fi
 
 # Check npm
 if command_exists npm; then
     NPM_VERSION=$(npm --version)
-    echo -e "   ${GREEN}✅ npm${NC} v$NPM_VERSION"
+    echo "   PASS: npm v$NPM_VERSION"
 else
-    echo -e "   ${RED}❌ npm${NC} not found"
+    echo "   ERROR: npm not found"
     MISSING_PREREQS+=("npm")
 fi
 
 # Check Git
 if command_exists git; then
     GIT_VERSION=$(git --version)
-    echo -e "   ${GREEN}✅ Git${NC} $GIT_VERSION"
+    echo "   PASS: Git $GIT_VERSION"
 else
-    echo -e "   ${RED}❌ Git${NC} not found"
+    echo "   ERROR: Git not found"
     MISSING_PREREQS+=("git")
 fi
 
 # Check Chrome/Chromium
 if [ "$OS_NAME" = "macOS" ]; then
     if [ -d "/Applications/Google Chrome.app" ] || [ -d "/Applications/Chromium.app" ]; then
-        echo -e "   ${GREEN}✅ Chrome/Chromium${NC} detected"
+        echo "   PASS: Chrome/Chromium detected"
     else
-        echo -e "   ${YELLOW}⚠️  Chrome/Chromium${NC} not detected"
+        echo "   WARNING: Chrome/Chromium not detected"
     fi
 elif [ "$OS_NAME" = "Linux" ]; then
     if command_exists google-chrome || command_exists chromium || command_exists chromium-browser; then
-        echo -e "   ${GREEN}✅ Chrome/Chromium${NC} detected"
+        echo "   PASS: Chrome/Chromium detected"
     else
-        echo -e "   ${YELLOW}⚠️  Chrome/Chromium${NC} not detected"
+        echo "   WARNING: Chrome/Chromium not detected"
     fi
 fi
 
 # Install missing prerequisites
 if [ ${#MISSING_PREREQS[@]} -gt 0 ]; then
     echo ""
-    echo -e "${YELLOW}⚠️  Missing prerequisites:${NC} ${MISSING_PREREQS[*]}"
+    echo "WARNING: Missing prerequisites: ${MISSING_PREREQS[*]}"
     echo ""
     echo "Please install:"
 
@@ -189,20 +187,20 @@ if [ ${#MISSING_PREREQS[@]} -gt 0 ]; then
 fi
 
 echo ""
-echo -e "${GREEN}✅ All prerequisites satisfied${NC}"
+echo "PASS: All prerequisites satisfied"
 echo ""
 
 # Step 1: Install MCP Server from NPM
-echo -e "${GREEN}▶ Step 1: Installing Browser MCP Server${NC}"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "▶ Step 1: Installing Browser MCP Server"
+echo "------------------------------------------------------------"
 
 # Check if already installed
 if command_exists browser-mcp-server; then
     INSTALLED_VERSION=$(npm list -g @rvegajr/browser-mcp-server --depth=0 2>/dev/null | grep browser-mcp-server | awk '{print $2}' | tr -d '@')
-    echo -e "   ${YELLOW}⚠️  Browser MCP Server already installed (v${INSTALLED_VERSION})${NC}"
+    echo "   WARNING: Browser MCP Server already installed (v${INSTALLED_VERSION})"
 
     if [ "$AUTO_ACCEPT" = true ]; then
-        echo -e "   ${YELLOW}Auto-accepting: Reinstalling...${NC}"
+        echo "   Auto-accepting: Reinstalling..."
         response="y"
     else
         echo -n "   Reinstall? (y/n): "
@@ -210,34 +208,34 @@ if command_exists browser-mcp-server; then
     fi
 
     if [ "$response" = "y" ] || [ "$response" = "Y" ]; then
-        echo -e "   ${BLUE}Uninstalling old version...${NC}"
+        echo "   Uninstalling old version..."
         npm uninstall -g @rvegajr/browser-mcp-server 2>&1 | grep -v "npm WARN"
     else
-        echo -e "   ${GREEN}✅ Using existing installation${NC}"
+        echo "   PASS: Using existing installation"
         echo ""
         SKIP_NPM_INSTALL=true
     fi
 fi
 
 if [ "$SKIP_NPM_INSTALL" != "true" ]; then
-    echo -e "   ${BLUE}Installing via NPM...${NC}"
+    echo "   Installing via NPM..."
 
     # Install from NPM registry
     npm install -g @rvegajr/browser-mcp-server 2>&1 | tail -5
 
     if [ $? -eq 0 ]; then
-        echo -e "   ${GREEN}✅ Browser MCP Server installed${NC}"
+        echo "   PASS: Browser MCP Server installed"
 
         # Verify installation
         if command_exists browser-mcp-server; then
-            echo -e "   ${GREEN}✅ Command 'browser-mcp-server' is available${NC}"
+            echo "   PASS: Command 'browser-mcp-server' is available"
         else
-            echo -e "   ${YELLOW}⚠️  Command not found in PATH${NC}"
-            echo -e "   ${YELLOW}   You may need to restart your terminal${NC}"
+            echo "   WARNING: Command not found in PATH"
+            echo "      You may need to restart your terminal"
         fi
     else
-        echo -e "   ${RED}❌ Installation failed${NC}"
-        echo -e "   ${YELLOW}   Try manual install: npm install -g browser-mcp-server${NC}"
+        echo "   ERROR: Installation failed"
+        echo "      Try manual install: npm install -g browser-mcp-server"
         exit 1
     fi
 fi
@@ -245,46 +243,46 @@ fi
 echo ""
 
 # Step 2: Detect IDEs
-echo -e "${GREEN}▶ Step 2: Detecting IDEs${NC}"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "▶ Step 2: Detecting IDEs"
+echo "------------------------------------------------------------"
 
 FOUND_IDES=()
 
 # Check for Claude Desktop
 if [ "$OS_NAME" = "macOS" ]; then
     if [ -d "$HOME/Library/Application Support/Claude" ]; then
-        echo -e "   ${GREEN}✅ Claude Desktop detected${NC}"
+        echo "   PASS: Claude Desktop detected"
         FOUND_IDES+=("claude")
     fi
 fi
 
 # Check for Cursor
 if [ -d "$HOME/.cursor" ]; then
-    echo -e "   ${GREEN}✅ Cursor IDE detected${NC}"
+    echo "   PASS: Cursor IDE detected"
     FOUND_IDES+=("cursor")
 fi
 
 # Check for Windsurf
 if [ -d "$HOME/.codeium/windsurf" ]; then
-    echo -e "   ${GREEN}✅ Windsurf IDE detected${NC}"
+    echo "   PASS: Windsurf IDE detected"
     FOUND_IDES+=("windsurf")
 fi
 
 if [ ${#FOUND_IDES[@]} -eq 0 ]; then
-    echo -e "   ${YELLOW}⚠️  No supported IDEs detected${NC}"
-    echo -e "   ${BLUE}   Supported: Claude Desktop, Cursor, Windsurf${NC}"
+    echo "   WARNING: No supported IDEs detected"
+    echo "      Supported: Claude Desktop, Cursor, Windsurf"
 fi
 
 echo ""
 
 # Step 3: Configure IDEs
 if [ ${#FOUND_IDES[@]} -gt 0 ]; then
-    echo -e "${GREEN}▶ Step 3: Configuring IDEs${NC}"
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "▶ Step 3: Configuring IDEs"
+    echo "------------------------------------------------------------"
 
     # Configure Claude Desktop
     if [[ " ${FOUND_IDES[@]} " =~ " claude " ]]; then
-        echo -e "${BLUE}Configuring Claude Desktop...${NC}"
+        echo "Configuring Claude Desktop..."
         CONFIG_DIR="$HOME/Library/Application Support/Claude"
         CONFIG_FILE="$CONFIG_DIR/claude_desktop_config.json"
 
@@ -294,7 +292,7 @@ if [ ${#FOUND_IDES[@]} -gt 0 ]; then
         if [ -f "$CONFIG_FILE" ]; then
             BACKUP_FILE="$CONFIG_FILE.backup.$(date +%Y%m%d_%H%M%S)"
             cp "$CONFIG_FILE" "$BACKUP_FILE"
-            echo -e "   ${YELLOW}📦 Backed up existing config${NC}"
+            echo "   INFO: Backed up existing config"
         fi
 
         # Create/update config
@@ -307,13 +305,13 @@ if [ ${#FOUND_IDES[@]} -gt 0 ]; then
   }
 }
 EOF
-        echo -e "   ${GREEN}✅ Claude Desktop configured${NC}"
+        echo "   PASS: Claude Desktop configured"
         echo ""
     fi
 
     # Configure Cursor
     if [[ " ${FOUND_IDES[@]} " =~ " cursor " ]]; then
-        echo -e "${BLUE}Configuring Cursor IDE...${NC}"
+        echo "Configuring Cursor IDE..."
         CONFIG_DIR="$HOME/.cursor"
         CONFIG_FILE="$CONFIG_DIR/mcp.json"
 
@@ -323,7 +321,7 @@ EOF
         if [ -f "$CONFIG_FILE" ]; then
             BACKUP_FILE="$CONFIG_FILE.backup.$(date +%Y%m%d_%H%M%S)"
             cp "$CONFIG_FILE" "$BACKUP_FILE"
-            echo -e "   ${YELLOW}📦 Backed up existing config${NC}"
+            echo "   INFO: Backed up existing config"
         fi
 
         # Create/update config
@@ -336,13 +334,13 @@ EOF
   }
 }
 EOF
-        echo -e "   ${GREEN}✅ Cursor IDE configured${NC}"
+        echo "   PASS: Cursor IDE configured"
         echo ""
     fi
 
     # Configure Windsurf
     if [[ " ${FOUND_IDES[@]} " =~ " windsurf " ]]; then
-        echo -e "${BLUE}Configuring Windsurf IDE...${NC}"
+        echo "Configuring Windsurf IDE..."
         CONFIG_DIR="$HOME/.codeium/windsurf"
         CONFIG_FILE="$CONFIG_DIR/mcp_config.json"
 
@@ -352,7 +350,7 @@ EOF
         if [ -f "$CONFIG_FILE" ]; then
             BACKUP_FILE="$CONFIG_FILE.backup.$(date +%Y%m%d_%H%M%S)"
             cp "$CONFIG_FILE" "$BACKUP_FILE"
-            echo -e "   ${YELLOW}📦 Backed up existing config${NC}"
+            echo "   INFO: Backed up existing config"
         fi
 
         # Create/update config
@@ -365,72 +363,72 @@ EOF
   }
 }
 EOF
-        echo -e "   ${GREEN}✅ Windsurf IDE configured${NC}"
+        echo "   PASS: Windsurf IDE configured"
         echo ""
     fi
 fi
 
 # Step 4: Extension Installation
-echo -e "${GREEN}▶ Step 4: Chrome Extension${NC}"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "▶ Step 4: Chrome Extension"
+echo "------------------------------------------------------------"
 
-echo -e "   ${BLUE}📦 Extension Location:${NC}"
+echo "   Extension Location:"
 echo "      $PROJECT_PATH/browser-mcp-extension/"
 echo ""
-echo -e "   ${YELLOW}📋 To install (if not already installed):${NC}"
-echo "      1. Open Chrome and go to: ${BLUE}chrome://extensions/${NC}"
-echo "      2. Enable ${BLUE}'Developer mode'${NC} (toggle in top-right)"
-echo "      3. Click ${BLUE}'Load unpacked'${NC}"
-echo "      4. Select folder: ${BLUE}$PROJECT_PATH/browser-mcp-extension/${NC}"
+echo "   Note: To install (if not already installed):"
+echo "      1. Open Chrome and go to: chrome://extensions/"
+echo "      2. Enable 'Developer mode' (toggle in top-right)"
+echo "      3. Click 'Load unpacked'"
+echo "      4. Select folder: $PROJECT_PATH/browser-mcp-extension/"
 echo ""
 
 # Try to copy to clipboard
 if command_exists pbcopy; then
     echo "$PROJECT_PATH/browser-mcp-extension/" | pbcopy
-    echo -e "   ${GREEN}✅ Path copied to clipboard!${NC}"
+    echo "   PASS: Path copied to clipboard!"
 elif command_exists xclip; then
     echo "$PROJECT_PATH/browser-mcp-extension/" | xclip -selection clipboard
-    echo -e "   ${GREEN}✅ Path copied to clipboard!${NC}"
+    echo "   PASS: Path copied to clipboard!"
 fi
 
 echo ""
 
 # Summary
 echo ""
-echo -e "${BLUE}"
-echo "╔════════════════════════════════════════════════════════════╗"
-echo "║                                                            ║"
-echo "║                   🎉 Setup Complete! 🎉                    ║"
-echo "║                                                            ║"
-echo "╚════════════════════════════════════════════════════════════╝"
-echo -e "${NC}"
+echo ""
+echo "============================================================"
+echo ""
+echo "                   Setup Complete!"
+echo ""
+echo "============================================================"
+echo ""
 echo ""
 
-echo -e "${GREEN}✅ What was installed:${NC}"
+echo "PASS: What was installed:"
 echo ""
-echo "  📦 MCP Server:"
-echo "     Command: ${BLUE}browser-mcp-server${NC}"
+echo "  MCP Server:"
+echo "     Command: browser-mcp-server"
 echo "     Version: 4.0.0"
 echo "     Architecture: WebSocket (ws://localhost:8765)"
 echo ""
 
 if [ ${#FOUND_IDES[@]} -gt 0 ]; then
-    echo "  📦 IDEs Configured:"
+    echo "  IDEs Configured:"
     for ide in "${FOUND_IDES[@]}"; do
         echo "     • $ide"
     done
     echo ""
 fi
 
-echo -e "${YELLOW}📋 Next Steps:${NC}"
+echo "Note: Next Steps:"
 echo ""
-echo "  ${BLUE}1. Load Chrome Extension:${NC}"
-echo "     • Open: ${BLUE}chrome://extensions/${NC}"
+echo "  1. Load Chrome Extension:"
+echo "     • Open: chrome://extensions/"
 echo "     • Enable 'Developer mode'"
 echo "     • Click 'Load unpacked'"
-echo "     • Select: ${BLUE}$PROJECT_PATH/browser-mcp-extension/${NC}"
+echo "     • Select: $PROJECT_PATH/browser-mcp-extension/"
 echo ""
-echo "  ${BLUE}2. Restart your IDE:${NC}"
+echo "  2. Restart your IDE:"
 if [[ " ${FOUND_IDES[@]} " =~ " claude " ]]; then
     echo "     • Claude Desktop: Quit (Cmd+Q) and reopen"
 fi
@@ -441,21 +439,21 @@ if [[ " ${FOUND_IDES[@]} " =~ " windsurf " ]]; then
     echo "     • Windsurf: Quit (Cmd+Q) and reopen"
 fi
 echo ""
-echo "  ${BLUE}3. Test in your IDE:${NC}"
-echo "     Ask: ${GREEN}'What MCP servers are available?'${NC}"
-echo "     Expected: ${GREEN}'browser-mcp' with 33 tools${NC}"
+echo "  3. Test in your IDE:"
+echo "     Ask: 'What MCP servers are available?'"
+echo "     Expected: 'browser-mcp' with 33 tools"
 echo ""
-echo "  ${BLUE}4. Use the tools:${NC}"
-echo "     Ask: ${GREEN}'List all tabs in my browser'${NC}"
-echo "     Ask: ${GREEN}'Get the DOM of the current page'${NC}"
-echo "     Ask: ${GREEN}'Show me the console errors'${NC}"
+echo "  4. Use the tools:"
+echo "     Ask: 'List all tabs in my browser'"
+echo "     Ask: 'Get the DOM of the current page'"
+echo "     Ask: 'Show me the console errors'"
 echo ""
 
-echo -e "${GREEN}📚 Documentation:${NC}"
+echo "Documentation:"
 echo "  • Main README: $PROJECT_PATH/README.md"
 echo "  • MCP Server: $PROJECT_PATH/mcp-server/README.md"
 echo "  • Extension: $PROJECT_PATH/browser-mcp-extension/README.md"
 echo ""
 
-echo -e "${BLUE}✨ Ready to expose browser state to AI! ✨${NC}"
+echo "Ready to expose browser state to AI!"
 echo ""
