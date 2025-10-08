@@ -393,7 +393,7 @@ if [ "$SKIP_NPM_INSTALL" != "true" ]; then
     echo -e "   ${BLUE}Installing via NPM...${NC}"
 
     # Install from local directory if we have it
-    if [ -d "$PROJECT_PATH/native-messaging-host/package.json" ]; then
+    if [ -f "$PROJECT_PATH/native-messaging-host/package.json" ]; then
         cd "$PROJECT_PATH/native-messaging-host"
         npm install -g . 2>&1 | tail -5
     else
