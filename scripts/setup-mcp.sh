@@ -538,20 +538,93 @@ for IDE in "${FOUND_IDES[@]}"; do
     esac
 done
 
-# Step 4: Chrome Extension
+# Step 4: Chrome Extension Check
 echo -e "${GREEN}▶ Step 4: Chrome Extension${NC}"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-if [ -d "$PROJECT_PATH/browser-mcp-extension" ]; then
-    echo -e "   ${GREEN}✅ Extension is ready${NC}"
+# Function to check if extension is installed
+check_extension_installed() {
+    local extensions_dir
+
+    case "$OS_NAME" in
+        macOS)
+            extensions_dir="$HOME/Library/Application Support/Google/Chrome/Default/Extensions"
+            ;;
+        Linux)
+            extensions_dir="$HOME/.config/google-chrome/Default/Extensions"
+            ;;
+        Windows)
+            extensions_dir="$LOCALAPPDATA/Google/Chrome/User Data/Default/Extensions"
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+
+    if [ ! -d "$extensions_dir" ]; then
+        return 1
+    fi
+
+    # Look for Browser MCP extension
+    for ext_id in "$extensions_dir"/*; do
+        if [ -d "$ext_id" ]; then
+            local versions=$(ls "$ext_id" 2>/dev/null)
+            if [ -n "$versions" ]; then
+                for version in $versions; do
+                    local manifest="$ext_id/$version/manifest.json"
+                    if [ -f "$manifest" ]; then
+                        if grep -q "Browser MCP" "$manifest" 2>/dev/null; then
+                            echo "$ext_id" | xargs basename
+                            return 0
+                        fi
+                    fi
+                done
+            fi
+        fi
+    done
+
+    return 1
+}
+
+# Check if extension is already installed
+EXTENSION_ID=$(check_extension_installed)
+
+if [ -n "$EXTENSION_ID" ]; then
+    echo -e "   ${GREEN}✅ Browser MCP extension is already installed${NC}"
+    echo "      Extension ID: $EXTENSION_ID"
     echo ""
-    echo "   To load in Chrome:"
-    echo "   1. Open: chrome://extensions/"
-    echo "   2. Enable 'Developer mode' (top-right toggle)"
-    echo "   3. Click 'Load unpacked'"
-    echo "   4. Select: $PROJECT_PATH/browser-mcp-extension/"
+    echo "   ${GREEN}🎉 You're all set! No manual installation needed.${NC}"
 else
-    echo -e "   ${RED}❌ Extension directory not found${NC}"
+    echo -e "   ${YELLOW}⚠️  Extension not detected in Chrome${NC}"
+    echo ""
+
+    if [ -d "$PROJECT_PATH/browser-mcp-extension" ]; then
+        echo "   ${BLUE}📦 Extension Location:${NC}"
+        echo "      $PROJECT_PATH/browser-mcp-extension/"
+        echo ""
+        echo "   ${YELLOW}📋 To install:${NC}"
+        echo "      1. Open Chrome and go to: ${BLUE}chrome://extensions/${NC}"
+        echo "      2. Enable ${BLUE}'Developer mode'${NC} (toggle in top-right)"
+        echo "      3. Click ${BLUE}'Load unpacked'${NC}"
+        echo "      4. Select folder: ${BLUE}$PROJECT_PATH/browser-mcp-extension/${NC}"
+        echo ""
+        echo "   ${GREEN}💡 Tip:${NC} Copy this path to clipboard:"
+        echo "      ${BLUE}$PROJECT_PATH/browser-mcp-extension/${NC}"
+
+        # Try to copy to clipboard
+        if command -v pbcopy &> /dev/null; then
+            echo "$PROJECT_PATH/browser-mcp-extension/" | pbcopy
+            echo ""
+            echo "   ${GREEN}✅ Path copied to clipboard!${NC}"
+        elif command -v xclip &> /dev/null; then
+            echo "$PROJECT_PATH/browser-mcp-extension/" | xclip -selection clipboard
+            echo ""
+            echo "   ${GREEN}✅ Path copied to clipboard!${NC}"
+        fi
+    else
+        echo -e "   ${RED}❌ Extension directory not found${NC}"
+        echo "      Expected: $PROJECT_PATH/browser-mcp-extension/"
+    fi
 fi
 echo ""
 
@@ -596,10 +669,22 @@ echo -e "${YELLOW}📋 Next Steps:${NC}"
 echo ""
 
 step=1
+
+# Only show extension step if not installed
+if [ -z "$EXTENSION_ID" ]; then
+    echo "  ${BLUE}${step}. Install Chrome Extension:${NC}"
+    echo "     • Open: ${BLUE}chrome://extensions/${NC}"
+    echo "     • Enable 'Developer mode'"
+    echo "     • Click 'Load unpacked'"
+    echo "     • Select: ${BLUE}$PROJECT_PATH/browser-mcp-extension/${NC}"
+    echo ""
+    ((step++))
+fi
+
 for IDE in "${FOUND_IDES[@]}"; do
     case "$IDE" in
         claude)
-            echo "  ${step}. Restart Claude Desktop (Quit completely, then reopen)"
+            echo "  ${step}. Restart Claude Desktop (Cmd+Q, then reopen)"
             ((step++))
             ;;
         cursor)
@@ -613,14 +698,9 @@ for IDE in "${FOUND_IDES[@]}"; do
     esac
 done
 
-echo "  ${step}. Load Chrome extension:"
-echo "     • chrome://extensions/"
-echo "     • Load unpacked: $PROJECT_PATH/browser-mcp-extension/"
-((step++))
-
 echo "  ${step}. Test in your IDE:"
-echo "     Ask: 'What MCP servers are available?'"
-echo "     Expected: 'browser-mcp'"
+echo "     Ask: ${GREEN}'What MCP servers are available?'${NC}"
+echo "     Expected: ${GREEN}'browser-mcp'${NC}"
 echo ""
 
 echo -e "${GREEN}📚 Documentation:${NC}"

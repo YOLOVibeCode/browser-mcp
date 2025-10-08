@@ -26,37 +26,49 @@ Browser MCP is a **pure JavaScript Chrome extension** that exposes complete brow
 
 ## 📦 Quick Install
 
-### One-Line Installation (Mac/Linux)
+### ⚡ One-Command Installation
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/YOLOVibeCode/browser-mcp/main/scripts/setup-mcp.sh | bash
 ```
 
-This will:
-1. ✅ Check prerequisites (Node.js, Python3, Git, Chrome)
-2. ✅ Auto-install missing dependencies (Mac/Linux)
-3. ✅ Install native messaging host
-4. ✅ Configure your IDE (Claude/Cursor/Windsurf)
-5. ✅ Load Chrome extension
+**That's it!** The script automatically:
+1. ✅ Checks & installs prerequisites (Node.js, Python3, Git)
+2. ✅ Installs native messaging host via NPM
+3. ✅ Detects if Chrome extension is already installed
+4. ✅ Configures your IDE (Claude/Cursor/Windsurf)
+5. ✅ Tests the connection
 
-**Prerequisites (auto-installed on Mac/Linux)**:
-- Node.js v16+ (for native messaging host)
-- Python 3 (for config merging)
-- Git (for cloning repository)
-- Chrome/Chromium browser
+### 🎯 What You Need to Do
 
-### Prerequisites
+**First Time Setup:**
+1. **Run the curl command** (see above)
+2. **Load the extension in Chrome** (only if not already installed):
+   - Open `chrome://extensions/`
+   - Enable "Developer mode"
+   - Click "Load unpacked"
+   - Select the folder shown by the script
+3. **Restart your IDE** (Claude/Cursor/Windsurf)
 
-The setup script automatically checks and installs prerequisites on **macOS and Linux**:
-- ✅ **Node.js v16+** - Required for native messaging host
-- ✅ **Python 3** - Required for JSON config merging
-- ✅ **Git** - Required for repository cloning
-- ✅ **Chrome/Chromium** - Required browser (warning only)
+**If Extension Already Installed:**
+1. **Run the curl command** (see above)
+2. **Restart your IDE**
+3. **Done!** 🎉
 
-**Installation Methods**:
-- **macOS**: Uses Homebrew (auto-installs Homebrew if missing)
-- **Linux**: Detects package manager (apt, yum, dnf, pacman, zypper)
-- **Windows**: Provides manual download links
+---
+
+### 📋 Prerequisites (Auto-Installed)
+
+The setup script automatically checks and installs:
+- ✅ **Node.js v16+** - Native messaging host
+- ✅ **Python 3** - Config file management
+- ✅ **Git** - Repository cloning
+- ⚠️ **Chrome/Chromium** - Shows warning if missing
+
+**Supported Platforms:**
+- **macOS** - Uses Homebrew (auto-installs if needed)
+- **Linux** - Supports apt, yum, dnf, pacman, zypper
+- **Windows** - Manual installation with download links
 
 ### Manual Installation
 
