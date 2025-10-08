@@ -1,0 +1,62 @@
+#!/usr/bin/env node
+
+/**
+ * Browser MCP Server CLI
+ */
+
+const MCPServer = require('../index');
+
+// Parse command line arguments
+const args = process.argv.slice(2);
+
+if (args.includes('--help') || args.includes('-h')) {
+  console.log(`
+Browser MCP Server v4.0.0
+
+Usage:
+  browser-mcp-server [options]
+
+Options:
+  --port PORT    WebSocket port (default: 8765)
+  --host HOST    WebSocket host (default: localhost)
+  --version      Show version
+  --help         Show this help
+
+Environment Variables:
+  BROWSER_MCP_PORT    Override default port
+
+Examples:
+  browser-mcp-server
+  browser-mcp-server --port 9000
+  BROWSER_MCP_PORT=9000 browser-mcp-server
+
+For more information, visit:
+  https://github.com/YOLOVibeCode/browser-mcp
+`);
+  process.exit(0);
+}
+
+if (args.includes('--version') || args.includes('-v')) {
+  console.log('4.0.0');
+  process.exit(0);
+}
+
+// Parse options
+const options = {};
+
+for (let i = 0; i < args.length; i++) {
+  if (args[i] === '--port' && args[i + 1]) {
+    options.wsPort = parseInt(args[i + 1], 10);
+    i++;
+  } else if (args[i] === '--host' && args[i + 1]) {
+    options.wsHost = args[i + 1];
+    i++;
+  }
+}
+
+// Start server
+const server = new MCPServer(options);
+server.start().catch((error) => {
+  console.error('Fatal error:', error);
+  process.exit(1);
+});
