@@ -1,7 +1,7 @@
 {
   "name": "browser-mcp",
-  "version": "3.0.4",
-  "description": "Browser MCP - Pure JavaScript Chrome Extension for AI-powered browser debugging",
+  "version": "4.0.0",
+  "description": "Browser MCP - WebSocket-based Chrome Extension for AI-powered browser debugging via MCP",
   "private": true,
   "scripts": {
     "test": "node browser-mcp-extension/tests/e2e.test.js"
