@@ -74,6 +74,13 @@ if [ "$0" = "bash" ]; then
 
     # Clone to Downloads directory instead of /tmp
     TEMP_DIR="$HOME/Downloads/browser-mcp-setup"
+
+    # Remove old installation if it exists
+    if [ -d "$TEMP_DIR" ]; then
+        echo "Removing previous installation..."
+        rm -rf "$TEMP_DIR"
+    fi
+
     git clone https://github.com/YOLOVibeCode/browser-mcp.git "$TEMP_DIR" 2>&1 | tail -5
 
     if [ ! -d "$TEMP_DIR" ]; then
