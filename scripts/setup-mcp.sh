@@ -593,6 +593,14 @@ if [ -n "$EXTENSION_ID" ]; then
     echo -e "   ${GREEN}✅ Browser MCP extension is already installed${NC}"
     echo "      Extension ID: $EXTENSION_ID"
     echo ""
+
+    # Configure native messaging manifest with detected extension ID
+    echo -e "   ${BLUE}📝 Configuring native messaging...${NC}"
+    if command -v browser-mcp-setup &> /dev/null; then
+        browser-mcp-setup "$EXTENSION_ID" &> /dev/null || true
+        echo -e "   ${GREEN}✅ Native messaging configured${NC}"
+    fi
+    echo ""
     echo "   ${GREEN}🎉 You're all set! No manual installation needed.${NC}"
 else
     echo -e "   ${YELLOW}⚠️  Extension not detected in Chrome${NC}"
