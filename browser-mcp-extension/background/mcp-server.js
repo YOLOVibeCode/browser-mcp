@@ -73,7 +73,7 @@ export class MCPServer extends IMCPServer {
         protocolVersion: '2024-11-05',
         serverInfo: {
           name: 'browser-mcp',
-          version: '3.0.1'
+          version: '4.0.0'
         },
         capabilities: {
           tools: {}
@@ -154,7 +154,7 @@ export class MCPServer extends IMCPServer {
    * @returns {Promise<void>}
    */
   async start() {
-    console.log('[MCP Server] Starting Browser MCP v3.0...');
+    console.log('[MCP Server] Starting Browser MCP v4.0.0...');
     console.log(`[MCP Server] Registered ${this.tools.size} tools`);
   }
 
