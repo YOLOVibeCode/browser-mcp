@@ -373,14 +373,14 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 
 # Check if already installed
 if command -v browser-mcp-host &> /dev/null; then
-    INSTALLED_VERSION=$(npm list -g @browser-mcp/native-host --depth=0 2>/dev/null | grep @browser-mcp/native-host | awk '{print $2}' | tr -d '@')
+    INSTALLED_VERSION=$(npm list -g browser-mcp-native-host --depth=0 2>/dev/null | grep browser-mcp-native-host | awk '{print $2}' | tr -d '@')
     echo -e "   ${YELLOW}⚠️  Native host already installed (v${INSTALLED_VERSION})${NC}"
     echo -n "   Reinstall? (y/n): "
     read -r response
 
     if [ "$response" = "y" ] || [ "$response" = "Y" ]; then
         echo -e "   ${BLUE}Uninstalling old version...${NC}"
-        npm uninstall -g @browser-mcp/native-host 2>&1 | grep -v "npm WARN"
+        npm uninstall -g browser-mcp-native-host 2>&1 | grep -v "npm WARN"
     else
         echo -e "   ${GREEN}✅ Using existing installation${NC}"
         echo ""
@@ -398,7 +398,7 @@ if [ "$SKIP_NPM_INSTALL" != "true" ]; then
         npm install -g . 2>&1 | tail -5
     else
         # Install from NPM registry
-        npm install -g @browser-mcp/native-host 2>&1 | tail -5
+        npm install -g browser-mcp-native-host 2>&1 | tail -5
     fi
 
     if [ $? -eq 0 ]; then
@@ -413,7 +413,7 @@ if [ "$SKIP_NPM_INSTALL" != "true" ]; then
         fi
     else
         echo -e "   ${RED}❌ Native messaging host installation failed${NC}"
-        echo -e "   ${YELLOW}   Try manual install: npm install -g @browser-mcp/native-host${NC}"
+        echo -e "   ${YELLOW}   Try manual install: npm install -g browser-mcp-native-host${NC}"
         exit 1
     fi
 fi
