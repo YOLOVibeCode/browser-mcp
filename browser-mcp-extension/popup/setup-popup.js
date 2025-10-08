@@ -27,7 +27,7 @@ function getGitHubScriptURL(osType) {
         case 'linux':
             return `${baseURL}/setup-mcp.sh`;
         case 'windows':
-            return `${baseURL}/install-mcp.bat`;
+            return `${baseURL}/setup-mcp.ps1`;
         default:
             return null;
     }
