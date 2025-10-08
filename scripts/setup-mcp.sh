@@ -53,10 +53,13 @@ YELLOW=''
 RED=''
 NC=''
 
+# Get latest version from NPM registry
+VERSION=$(npm view @rvegajr/browser-mcp-server version 2>/dev/null || echo "latest")
+
 echo "============================================================"
 echo ""
 echo "        Browser MCP - Automatic Setup Utility"
-echo "                      v4.0.0"
+echo "                      v${VERSION}"
 echo "              WebSocket Architecture"
 echo ""
 echo "============================================================"
@@ -415,7 +418,7 @@ echo "PASS: What was installed:"
 echo ""
 echo "  MCP Server:"
 echo "     Command: browser-mcp-server"
-echo "     Version: 4.0.0"
+echo "     Version: ${VERSION}"
 echo "     Architecture: WebSocket (ws://localhost:8765)"
 echo ""
 

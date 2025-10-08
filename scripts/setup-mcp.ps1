@@ -1,5 +1,4 @@
 # Browser MCP - Automatic Setup Utility (PowerShell)
-# Version: 4.0.0
 # WebSocket Architecture
 
 param(
@@ -42,11 +41,19 @@ $ColorGreen = "Green"
 $ColorYellow = "Yellow"
 $ColorRed = "Red"
 
+# Get latest version from NPM registry
+try {
+    $VERSION = (npm view @rvegajr/browser-mcp-server version 2>$null)
+    if (-not $VERSION) { $VERSION = "latest" }
+} catch {
+    $VERSION = "latest"
+}
+
 Write-Host ""
 Write-Host "╔════════════════════════════════════════════════════════════╗" -ForegroundColor $ColorBlue
 Write-Host "║                                                            ║" -ForegroundColor $ColorBlue
 Write-Host "║        Browser MCP - Automatic Setup Utility              ║" -ForegroundColor $ColorBlue
-Write-Host "║                      v4.0.0                                ║" -ForegroundColor $ColorBlue
+Write-Host "║                      v$VERSION                                ║" -ForegroundColor $ColorBlue
 Write-Host "║              WebSocket Architecture                        ║" -ForegroundColor $ColorBlue
 Write-Host "║                                                            ║" -ForegroundColor $ColorBlue
 Write-Host "╚════════════════════════════════════════════════════════════╝" -ForegroundColor $ColorBlue
@@ -406,7 +413,7 @@ Write-Host "✅ What was installed:" -ForegroundColor $ColorGreen
 Write-Host ""
 Write-Host "  📦 MCP Server:"
 Write-Host "     Command: browser-mcp-server" -ForegroundColor $ColorBlue
-Write-Host "     Version: 4.0.0"
+Write-Host "     Version: $VERSION"
 Write-Host "     Architecture: WebSocket (ws://localhost:8765)"
 Write-Host ""
 
