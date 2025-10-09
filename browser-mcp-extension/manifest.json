@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "Browser MCP v4.0.5",
-  "version": "4.0.5",
+  "name": "Browser MCP v4.0.6",
+  "version": "4.0.6",
   "description": "Ultimate Browser Debugging Suite - 33 tools for AI assistants via MCP. WebSocket-based architecture!",
   "permissions": [
     "debugger",
