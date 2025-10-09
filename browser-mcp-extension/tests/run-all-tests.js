@@ -5,7 +5,8 @@
 import { runTests as runTabManagerTests } from './tab-manager.test.js';
 import { runTests as runChromeCDPTests } from './chrome-cdp.test.js';
 import { runTests as runMCPServerTests } from './mcp-server.test.js';
-import { runTests as runNativeMessagingTests } from './native-messaging.test.js';
+// NOTE: Native messaging test removed - v4.0.4 uses WebSocket instead
+// import { runTests as runNativeMessagingTests } from './native-messaging.test.js';
 import { runTests as runMessageFilterTests } from './message-filter.test.js';
 import { runTests as runDeltaCompressionTests } from './delta-compression.test.js';
 import { runTests as runE2ETests } from './e2e.test.js';
@@ -20,7 +21,8 @@ async function runAllTests() {
     { name: 'TabManager', fn: runTabManagerTests },
     { name: 'ChromeCDP', fn: runChromeCDPTests },
     { name: 'MCPServer', fn: runMCPServerTests },
-    { name: 'Native Messaging', fn: runNativeMessagingTests },
+    // NOTE: Native Messaging removed in v4.0.4 - using WebSocket instead
+    // { name: 'Native Messaging', fn: runNativeMessagingTests },
     { name: 'Message Filter', fn: runMessageFilterTests },
     { name: 'Delta Compression', fn: runDeltaCompressionTests },
     { name: 'E2E Integration', fn: runE2ETests }

@@ -1,16 +1,19 @@
 /**
- * Browser MCP v4.0 - Service Worker
+ * Browser MCP v4.0.3 - Service Worker
  * Pure JavaScript - Chrome Extension compatible
- * WebSocket-based architecture
+ * WebSocket-based architecture (CLIENT mode)
  *
+ * Architecture changed in v4.0.3: Extension is now a WebSocket CLIENT
+ * connecting to the MCP server's WebSocket SERVER.
+ * 
  * This is the main entry point for the Chrome extension.
- * It initializes the WebSocket server, MCP server, registers all tools, and handles communication.
+ * It connects to MCP server, registers all tools, and handles communication.
  */
 
 import { MCPServer } from './mcp-server.js';
 import { TabManager } from './tab-manager.js';
 import { ChromeCDP } from './adapters/chrome-cdp.js';
-import { WebSocketServer } from './websocket-server.js';
+import { WebSocketClient } from './websocket-client.js';
 import { createGetConsoleTool, createClearConsoleTool } from './tools/console-tools.js';
 import { createGetDOMTool, createQuerySelectorTool, createGetAttributesTool } from './tools/dom-tools.js';
 import { createGetNetworkTool, createGetFailedRequestsTool } from './tools/network-tools.js';
@@ -23,13 +26,13 @@ import { createDetectFrameworkTool, createGetComponentSourceTool, createGetCompo
 import { createGetComponentStateTool, createGetRenderChainTool, createTraceDataSourcesTool } from './tools/debug-tools.js';
 import { createListScriptsTool, createGetSourceMapTool, createCompareSourceTool, createResolveSourceLocationTool } from './tools/sourcemap-tools.js';
 
-console.log('[Browser MCP v4.0] Service worker starting...');
+console.log('[Browser MCP v4.0.3] Service worker starting...');
 
 // Initialize core components
 const mcpServer = new MCPServer();
 const tabManager = new TabManager();
 const cdp = new ChromeCDP();
-const wsServer = new WebSocketServer({ port: 8765 });
+const wsClient = new WebSocketClient('ws://localhost:8765');
 
 // Register tools
 console.log('[Browser MCP] Registering ALL 33 tools...');
@@ -92,11 +95,10 @@ mcpServer.registerTool(createResolveSourceLocationTool(tabManager, cdp));
 console.log(`[Browser MCP] Registered ${mcpServer.getToolCount()} tools:`, mcpServer.getToolNames());
 
 // Setup WebSocket message handler
-wsServer.onMessage(async (message, socketId) => {
+wsClient.onMessage(async (message) => {
   console.log('[Browser MCP] Received MCP request:', {
     method: message.method,
-    id: message.id,
-    from: `socket-${socketId}`
+    id: message.id
   });
 
   try {
@@ -104,7 +106,7 @@ wsServer.onMessage(async (message, socketId) => {
     const response = await mcpServer.handleRequest(message);
 
     // Send response back via WebSocket
-    wsServer.sendMessage(socketId, response);
+    wsClient.sendMessage(response);
 
     console.log('[Browser MCP] Sent MCP response:', {
       id: response.id,
@@ -124,38 +126,40 @@ wsServer.onMessage(async (message, socketId) => {
       }
     };
 
-    wsServer.sendMessage(socketId, errorResponse);
+    wsClient.sendMessage(errorResponse);
   }
 });
 
-// Start WebSocket server
-async function startServer() {
+// Connect to MCP server
+async function connectToMCPServer() {
   try {
-    const port = await wsServer.start();
-    console.log(`[Browser MCP] WebSocket server started on port ${port}`);
-    console.log('[Browser MCP] Ready to accept connections from MCP server');
-    console.log('[Browser MCP] Waiting for browser-mcp-server to connect...');
-
-    // Start MCP server
+    console.log('[Browser MCP] Connecting to MCP server...');
+    
+    // Start MCP server (internal)
     await mcpServer.start();
     console.log('[Browser MCP] MCP server initialized with 33 tools');
+    
+    // Connect to external MCP server via WebSocket
+    wsClient.connect();
+    console.log('[Browser MCP] Connecting to ws://localhost:8765...');
+    console.log('[Browser MCP] Make sure browser-mcp-server is running');
   } catch (error) {
-    console.error('[Browser MCP] Failed to start server:', error);
+    console.error('[Browser MCP] Failed to connect:', error);
   }
 }
 
 // Handle extension installation
 chrome.runtime.onInstalled.addListener((details) => {
   console.log('[Browser MCP] Extension installed/updated:', details.reason);
-  startServer();
+  connectToMCPServer();
 });
 
-// Start server on load
-startServer();
+// Connect on load
+connectToMCPServer();
 
 // Keep service worker alive
 setInterval(() => {
-  console.log('[Browser MCP] Keepalive ping - Active connections:', wsServer.getConnectionCount());
+  console.log('[Browser MCP] Keepalive ping - Connected:', wsClient.isConnected());
 }, 20000);
 
 console.log('[Browser MCP] Service worker initialized successfully! 🚀');

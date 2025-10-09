@@ -6,11 +6,14 @@
  * Bridges IDE (via stdio/MCP) to Chrome Extension (via WebSocket)
  *
  * Architecture:
- * IDE (stdio) ↔ This Server ↔ Chrome Extension (WebSocket)
+ * IDE (stdio) ↔ This Server (WebSocket SERVER) ↔ Chrome Extension (WebSocket CLIENT)
+ * 
+ * Note: Architecture flipped in v4.0.3 because chrome.sockets API
+ * is not available in Manifest V3 service workers
  */
 
 const StdioHandler = require('./stdio-handler');
-const WebSocketClient = require('./websocket-client');
+const WebSocketServerHost = require('./websocket-server-host');
 const MessageQueue = require('./message-queue');
 const { version } = require('./package.json');
 
@@ -18,15 +21,12 @@ class MCPServer {
   constructor(options = {}) {
     this.options = {
       wsPort: options.wsPort || process.env.BROWSER_MCP_PORT || 8765,
-      wsHost: options.wsHost || 'localhost',
       ...options
     };
 
-    this.wsUrl = `ws://${this.options.wsHost}:${this.options.wsPort}`;
-
     // Initialize components
     this.stdio = new StdioHandler();
-    this.ws = new WebSocketClient(this.wsUrl);
+    this.ws = new WebSocketServerHost(this.options.wsPort);
     this.queue = new MessageQueue();
 
     this.setupHandlers();
@@ -138,14 +138,15 @@ class MCPServer {
   async start() {
     this.log('Starting Browser MCP Server', {
       version: version,
-      wsUrl: this.wsUrl
+      port: this.options.wsPort
     });
 
-    // Connect to extension
-    this.ws.connect();
+    // Start WebSocket server
+    await this.ws.start();
 
     this.log('Server started');
-    this.log('Waiting for Chrome Extension connection...');
+    this.log('WebSocket server listening on port ' + this.options.wsPort);
+    this.log('Waiting for Chrome Extension to connect...');
     this.log('Make sure Browser MCP extension is loaded in Chrome');
   }
 
@@ -155,8 +156,8 @@ class MCPServer {
   shutdown(signal) {
     this.log('Shutting down', { signal });
 
-    // Disconnect WebSocket
-    this.ws.disconnect();
+    // Stop WebSocket server
+    this.ws.stop();
 
     // Exit
     process.exit(0);

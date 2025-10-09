@@ -1,0 +1,93 @@
+╔═══════════════════════════════════════════════════════════════╗
+║                  BROWSER MCP v4.0.4                          ║
+║              WEBSOCKET ARCHITECTURE FIX                      ║
+╚═══════════════════════════════════════════════════════════════╝
+
+🔥 THE PROBLEM:
+   chrome.sockets.tcpServer is NOT AVAILABLE in Manifest V3
+
+✅ THE SOLUTION:
+   Flipped WebSocket roles:
+   
+   OLD (v4.0.3): Extension = WebSocket SERVER ❌
+   NEW (v4.0.4): Extension = WebSocket CLIENT ✅
+   
+   MCP Server now HOSTS the WebSocket server on localhost:8765
+
+───────────────────────────────────────────────────────────────
+
+📋 QUICK START (2 COMMANDS):
+
+   Terminal 1:
+   $ cd mcp-server && node index.js
+   
+   Look for: "WebSocket server listening on ws://localhost:8765"
+
+   Terminal 2:
+   $ node test-websocket-direct.js
+   
+   Should show: "✅ Connected to WebSocket server!"
+
+───────────────────────────────────────────────────────────────
+
+🌐 CHROME EXTENSION:
+
+   1. Open chrome://extensions/
+   2. Find "Browser MCP v4.0.3"
+   3. Click RELOAD button
+   4. Version should show: v4.0.4
+   5. Click "service worker" to see console
+   6. Look for: "✅ Connected to MCP server"
+
+───────────────────────────────────────────────────────────────
+
+📚 DOCUMENTATION:
+
+   FIX_COMPLETE.md           ← START HERE
+   SETUP_v4.0.4.md          ← Full setup guide
+   ARCHITECTURE_FIX_v4.0.4.md ← Technical details
+
+───────────────────────────────────────────────────────────────
+
+🧪 TESTING:
+
+   Unit tests:        npm run test:unit
+   E2E tests:         npm run test:e2e
+   Integration tests: npm run test:integration
+   Full stack:        ./test-full-stack.sh
+
+───────────────────────────────────────────────────────────────
+
+✅ VERIFICATION CHECKLIST:
+
+   [ ] MCP server starts and shows "listening on ws://localhost:8765"
+   [ ] lsof -i :8765 shows LISTEN
+   [ ] Extension shows v4.0.4 in chrome://extensions/
+   [ ] Console shows "✅ Connected to MCP server"
+   [ ] test-websocket-direct.js succeeds
+   [ ] All integration tests pass
+
+───────────────────────────────────────────────────────────────
+
+🏗️ ARCHITECTURE:
+
+   Before (❌):
+   ┌──────────┐  WebSocket   ┌───────────────┐
+   │ MCP      │  CLIENT      │  Extension    │
+   │ Server   │  connects to │  (WS SERVER)  │
+   │          │      →       │  ❌ No API!   │
+   └──────────┘              └───────────────┘
+
+   After (✅):
+   ┌──────────────┐          ┌───────────────┐
+   │ MCP Server   │          │  Extension    │
+   │ (WS SERVER)  │ ← conn   │  (WS CLIENT)  │
+   │ Port :8765   │   ects   │  ✅ Works!    │
+   └──────────────┘          └───────────────┘
+
+───────────────────────────────────────────────────────────────
+
+Status: READY FOR TESTING
+Version: 4.0.4
+Date: 2025-10-09
+
