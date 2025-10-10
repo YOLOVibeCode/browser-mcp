@@ -1,8 +1,8 @@
-# 🚀 Browser MCP v4.0.6 - WebSocket Architecture
+# 🚀 Browser MCP v4.0.8 - WebSocket Architecture
 
 **AI-Powered Browser Debugging Suite for Claude Desktop, Cursor, and Windsurf**
 
-[![Version](https://img.shields.io/badge/version-4.0.6-blue.svg)](https://github.com/YOLOVibeCode/browser-mcp)
+[![Version](https://img.shields.io/badge/version-4.0.8-blue.svg)](https://github.com/YOLOVibeCode/browser-mcp)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Chrome Extension](https://img.shields.io/badge/chrome-extension-brightgreen.svg)]()
 [![MCP](https://img.shields.io/badge/protocol-MCP-orange.svg)]()
