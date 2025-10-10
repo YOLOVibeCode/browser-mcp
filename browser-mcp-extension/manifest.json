@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "Browser MCP v4.0.6",
-  "version": "4.0.6",
+  "name": "Browser MCP v4.0.8",
+  "version": "4.0.8",
   "description": "Ultimate Browser Debugging Suite - 33 tools for AI assistants via MCP. WebSocket-based architecture!",
   "permissions": [
     "debugger",
@@ -18,8 +18,8 @@
     "type": "module"
   },
   "action": {
-    "default_popup": "popup/setup-popup.html",
-    "default_title": "Browser MCP - Setup & Debug",
+    "default_popup": "popup/popup.html",
+    "default_title": "Browser MCP v4.0 - WebSocket",
     "default_icon": {
       "16": "icons/icon-16.png",
       "48": "icons/icon-48.png",

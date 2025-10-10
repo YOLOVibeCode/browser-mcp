@@ -1,17 +1,26 @@
 {
   "name": "browser-mcp",
-  "version": "4.0.5",
+  "version": "4.0.8",
   "description": "Browser MCP - WebSocket-based Chrome Extension for AI-powered browser debugging via MCP",
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "npm run test:unit && npm run test:e2e && npm run test:integration",
+    "test": "npm run test:unit && npm run test:e2e && npm run test:integration:all && npm run test:mcp && npm run test:ai && npm run test:ide",
     "test:unit": "node browser-mcp-extension/tests/run-all-tests.js",
-    "test:e2e": "playwright test extension-basic.e2e.spec.js --reporter=list --timeout=30000",
-    "test:e2e:headed": "playwright test extension-basic.e2e.spec.js --headed --reporter=list",
+    "test:e2e": "playwright test browser-mcp-extension/tests/extension-basic.e2e.spec.js --reporter=list --timeout=30000",
+    "test:e2e:headed": "playwright test browser-mcp-extension/tests/extension-basic.e2e.spec.js --headed --reporter=list",
     "test:e2e:debug": "playwright test --debug",
-    "test:integration": "playwright test integration-simple.e2e.spec.js --reporter=list --timeout=60000",
-    "test:quick": "node browser-mcp-extension/tests/e2e.test.js"
+    "test:integration": "playwright test browser-mcp-extension/tests/integration-simple.e2e.spec.js --reporter=list --timeout=60000",
+    "test:integration:all": "npm run test:integration:routing && npm run test:integration:reconnection && npm run test:tools:validation",
+    "test:integration:routing": "playwright test tests/integration/message-routing.e2e.spec.js --reporter=list --timeout=120000",
+    "test:integration:reconnection": "playwright test tests/integration/reconnection.e2e.spec.js --reporter=list --timeout=120000",
+    "test:tools:validation": "playwright test tests/tools/tool-validation.e2e.spec.js --reporter=list --timeout=300000",
+    "test:ai:dialogue": "playwright test tests/ai-integration/automated-ai-dialogue.e2e.spec.js --reporter=list --timeout=180000",
+    "test:mcp": "playwright test browser-mcp-extension/tests/mcp-full-stack.e2e.spec.js --reporter=list --timeout=120000",
+    "test:ai": "playwright test browser-mcp-extension/tests/ai-assistant-integration.e2e.spec.js --reporter=list --timeout=120000",
+    "test:ide": "playwright test browser-mcp-extension/tests/ide-compatibility.e2e.spec.js --reporter=list --timeout=120000",
+    "test:quick": "node browser-mcp-extension/tests/e2e.test.js",
+    "test:performance": "npm run test:tools:validation -- --grep 'Performance benchmark'"
   },
   "devDependencies": {
     "@anthropic-ai/sdk": "^0.27.0",
