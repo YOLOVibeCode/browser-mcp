@@ -75,14 +75,17 @@ if [ "$0" = "bash" ]; then
     echo "Running from curl | bash - cloning repository first..."
     echo ""
 
-    # Clone to Downloads directory instead of /tmp
-    TEMP_DIR="$HOME/Downloads/browser-mcp-setup"
+    # Clone to Downloads directory with version in path
+    TEMP_DIR="$HOME/Downloads/browser-mcp-setup/v${VERSION}"
 
     # Remove old installation if it exists
     if [ -d "$TEMP_DIR" ]; then
-        echo "Removing previous installation..."
+        echo "Removing previous installation (v${VERSION})..."
         rm -rf "$TEMP_DIR"
     fi
+
+    # Create parent directory if needed
+    mkdir -p "$(dirname "$TEMP_DIR")"
 
     git clone https://github.com/YOLOVibeCode/browser-mcp.git "$TEMP_DIR" 2>&1 | tail -5
 
@@ -379,10 +382,10 @@ EOF
 fi
 
 # Step 4: Extension Installation
-echo "▶ Step 4: Chrome Extension"
+echo "▶ Step 4: Chrome Extension (v${VERSION})"
 echo "------------------------------------------------------------"
 
-echo "   Extension Location:"
+echo "   Extension Location (v${VERSION}):"
 echo "      $PROJECT_PATH/browser-mcp-extension/"
 echo ""
 echo "   Note: To install (if not already installed):"
@@ -432,11 +435,12 @@ fi
 
 echo "Note: Next Steps:"
 echo ""
-echo "  1. Load Chrome Extension:"
+echo "  1. Load Chrome Extension (v${VERSION}):"
 echo "     • Open: chrome://extensions/"
 echo "     • Enable 'Developer mode'"
 echo "     • Click 'Load unpacked'"
 echo "     • Select: $PROJECT_PATH/browser-mcp-extension/"
+echo "     • Verify extension name shows: 'Browser MCP v${VERSION}'"
 echo ""
 echo "  2. Restart your IDE:"
 if [[ " ${FOUND_IDES[@]} " =~ " claude " ]]; then
