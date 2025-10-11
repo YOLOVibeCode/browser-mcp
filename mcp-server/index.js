@@ -358,17 +358,21 @@ The server is waiting patiently. Once you load the extension, it will auto-conne
       port: this.options.wsPort
     });
 
-    // Start HTTP server for health checks
-    this.startHttpServer();
+    try {
+      // Start HTTP server for health checks
+      this.startHttpServer();
 
-    // Start WebSocket server
-    await this.ws.start();
+      // Start WebSocket server
+      await this.ws.start();
 
-    this.log('Server started');
-    this.log('WebSocket server listening on port ' + this.options.wsPort);
-    this.log('HTTP health endpoint available at http://localhost:' + (this.options.wsPort + 1) + '/health');
-    this.log('Waiting for Chrome Extension to connect...');
-    this.log('Make sure Browser MCP extension is loaded in Chrome');
+      this.log('Server started');
+      this.log('WebSocket server listening on port ' + this.options.wsPort);
+      this.log('Waiting for Chrome Extension to connect...');
+      this.log('Make sure Browser MCP extension is loaded in Chrome');
+    } catch (error) {
+      this.log('Failed to start server:', error);
+      throw error;
+    }
   }
 
   /**
@@ -390,9 +394,62 @@ The server is waiting patiently. Once you load the extension, it will auto-conne
       }
     });
 
-    this.httpServer.listen(this.options.wsPort + 1, () => {
-      this.log('HTTP health server started on port ' + (this.options.wsPort + 1));
-    });
+    // Try to start HTTP server on a range of ports
+    this.tryStartHttpServer(this.options.wsPort + 1, 10);
+  }
+
+  tryStartHttpServer(startPort, maxAttempts = 10) {
+    let attempts = 0;
+    let serverStarted = false;
+    
+    const tryPort = (port) => {
+      if (attempts >= maxAttempts || serverStarted) {
+        if (!serverStarted) {
+          this.log('No available port found for HTTP health server, skipping health endpoint');
+          this.httpServer = null;
+        }
+        return;
+      }
+      
+      attempts++;
+      
+      // Create a new server instance for each attempt
+      const testServer = http.createServer((req, res) => {
+        if (req.url === '/health') {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({
+            status: 'healthy',
+            version: version,
+            websocketConnected: this.ws.isConnected(),
+            timestamp: new Date().toISOString()
+          }));
+        } else {
+          res.writeHead(404, { 'Content-Type': 'text/plain' });
+          res.end('Not Found');
+        }
+      });
+      
+      testServer.listen(port, () => {
+        if (!serverStarted) {
+          this.httpServer = testServer;
+          this.log('HTTP health server started on port ' + port);
+          serverStarted = true;
+        }
+      });
+      
+      testServer.on('error', (err) => {
+        if (err.code === 'EADDRINUSE' && !serverStarted) {
+          this.log('HTTP health server port ' + port + ' is busy, trying next port...');
+          testServer.close();
+          tryPort(port + 1);
+        } else if (!serverStarted) {
+          this.log('HTTP health server error:', err);
+          this.httpServer = null;
+        }
+      });
+    };
+    
+    tryPort(startPort);
   }
 
   /**

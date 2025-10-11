@@ -39,10 +39,17 @@ class WebSocketServerHost extends EventEmitter {
         
         this.wss.on('error', (error) => {
           this.log('WebSocket server error:', error.message);
-          reject(error);
+          if (error.code === 'EADDRINUSE') {
+            this.log(`Port ${this.port} is already in use. This is normal if multiple MCP servers are running.`);
+            // Don't reject, just log the error and continue
+            resolve();
+          } else {
+            reject(error);
+          }
         });
         
       } catch (error) {
+        this.log('Failed to create WebSocket server:', error.message);
         reject(error);
       }
     });
@@ -104,6 +111,20 @@ class WebSocketServerHost extends EventEmitter {
     }
     
     this.extensionConnection.send(JSON.stringify(message));
+  }
+
+  /**
+   * Send message to first available client
+   */
+  sendToFirstClient(message) {
+    if (this.wss && this.wss.clients.size > 0) {
+      const firstClient = Array.from(this.wss.clients)[0];
+      if (firstClient.readyState === 1) { // OPEN
+        firstClient.send(JSON.stringify(message));
+        return true;
+      }
+    }
+    return false;
   }
 
   /**

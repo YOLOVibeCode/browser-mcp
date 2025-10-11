@@ -1,3 +1,3 @@
-2025/10/09-07:09:38.536 1265377 Reusing MANIFEST /Users/xcode/Documents/YOLOProjects/browser-mcp/browser-mcp-extension/tests/.playwright-chrome-data/Default/Service Worker/Database/MANIFEST-000001
-2025/10/09-07:09:38.537 1265377 Recovering log #3
-2025/10/09-07:09:38.538 1265377 Reusing old log /Users/xcode/Documents/YOLOProjects/browser-mcp/browser-mcp-extension/tests/.playwright-chrome-data/Default/Service Worker/Database/000003.log 
+2025/10/10-18:53:19.872 5a06fc Reusing MANIFEST /Users/xcode/Documents/YOLOProjects/browser-mcp/browser-mcp-extension/tests/.playwright-chrome-data/Default/Service Worker/Database/MANIFEST-000001
+2025/10/10-18:53:19.874 5a06fc Recovering log #3
+2025/10/10-18:53:19.875 5a06fc Reusing old log /Users/xcode/Documents/YOLOProjects/browser-mcp/browser-mcp-extension/tests/.playwright-chrome-data/Default/Service Worker/Database/000003.log 

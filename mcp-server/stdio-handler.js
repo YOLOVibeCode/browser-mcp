@@ -52,8 +52,8 @@ class StdioHandler {
    * Handle stdin end
    */
   handleEnd() {
-    this.log('Stdin closed, exiting');
-    process.exit(0);
+    this.log('Stdin closed, but continuing to run as standalone WebSocket server');
+    // Don't exit - keep the WebSocket server running for standalone mode
   }
 
   /**

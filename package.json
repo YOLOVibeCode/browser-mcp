@@ -1,6 +1,6 @@
 {
   "name": "browser-mcp",
-  "version": "4.0.9",
+  "version": "4.0.10",
   "description": "Browser MCP - WebSocket-based Chrome Extension for AI-powered browser debugging via MCP",
   "private": true,
   "type": "module",

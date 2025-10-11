@@ -1,2 +1,3 @@
-2025/10/08-21:03:40.437 fe5a30 Creating DB /Users/xcode/Documents/YOLOProjects/browser-mcp/browser-mcp-extension/tests/.playwright-chrome-data/Default/Extension Scripts since it was missing.
-2025/10/08-21:03:40.440 fe5a30 Reusing MANIFEST /Users/xcode/Documents/YOLOProjects/browser-mcp/browser-mcp-extension/tests/.playwright-chrome-data/Default/Extension Scripts/MANIFEST-000001
+2025/10/10-18:53:20.651 5a06de Reusing MANIFEST /Users/xcode/Documents/YOLOProjects/browser-mcp/browser-mcp-extension/tests/.playwright-chrome-data/Default/Extension Scripts/MANIFEST-000001
+2025/10/10-18:53:20.651 5a06de Recovering log #3
+2025/10/10-18:53:20.651 5a06de Reusing old log /Users/xcode/Documents/YOLOProjects/browser-mcp/browser-mcp-extension/tests/.playwright-chrome-data/Default/Extension Scripts/000003.log 

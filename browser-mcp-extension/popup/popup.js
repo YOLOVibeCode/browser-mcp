@@ -1,94 +1,131 @@
 /**
- * Browser MCP v3.0 - Popup UI Logic
- * Pure JavaScript - Chrome Extension compatible
+ * Browser MCP v4.0 - Popup Interface
+ * WebSocket-based architecture
  */
 
-// DOM elements
-const statusIndicator = document.getElementById('statusIndicator');
-const statusText = document.getElementById('statusText');
-const statusMessage = document.getElementById('statusMessage');
-const tabCount = document.getElementById('tabCount');
-const toolCount = document.getElementById('toolCount');
-const tabsContent = document.getElementById('tabsContent');
-const refreshBtn = document.getElementById('refreshBtn');
-const testBtn = document.getElementById('testBtn');
+// Status elements
+const serverStatus = document.getElementById('server-status');
+const serverText = document.getElementById('server-text');
+const serverIndicator = document.getElementById('server-indicator');
+const wsText = document.getElementById('ws-text');
+const wsIndicator = document.getElementById('ws-indicator');
+const toolsCount = document.getElementById('tools-count');
+const infoMessage = document.getElementById('info-message');
+const testBtn = document.getElementById('test-btn');
+const reconnectBtn = document.getElementById('reconnect-btn');
 
-/**
- * Update UI with current status
- */
-async function updateStatus() {
-  try {
-    const response = await chrome.runtime.sendMessage({ type: 'GET_STATUS' });
-    
-    // Update status indicator
-    if (response.connected) {
-      statusIndicator.className = 'status-indicator connected';
-      statusText.textContent = 'Connected';
-      statusMessage.textContent = 'IDE connected via native messaging';
+// Update status
+function updateStatus(status) {
+  console.log('[Popup] Status update:', status);
+
+  // Update WebSocket status
+  if (status.websocket) {
+    wsText.textContent = status.websocket.connected ? 'Connected' : 'Disconnected';
+    wsIndicator.className = 'status-indicator ' + (status.websocket.connected ? 'status-connected' : 'status-disconnected');
+  }
+
+  // Update server status
+  if (status.server) {
+    if (status.server.running) {
+      serverText.textContent = 'Connected';
+      serverIndicator.className = 'status-indicator status-connected';
+      serverIndicator.classList.remove('pulse');
     } else {
-      statusIndicator.className = 'status-indicator disconnected';
-      statusText.textContent = 'Extension Active';
-      statusMessage.textContent = 'Native host not connected';
+      serverText.textContent = 'Not Running';
+      serverIndicator.className = 'status-indicator status-disconnected';
+      serverIndicator.classList.remove('pulse');
     }
-    
-    // Update counts
-    tabCount.textContent = response.tabCount || 0;
-    toolCount.textContent = response.toolCount || 0;
-    
-    // Update tabs list
-    if (response.tabs && response.tabs.length > 0) {
-      tabsContent.innerHTML = response.tabs
-        .map(tab => `<div class="tab-item">${tab.url}</div>`)
-        .join('');
-    } else {
-      tabsContent.innerHTML = '<div style="color: #999;">No tabs tracked yet</div>';
+  }
+
+  // Update tools count
+  if (status.tools !== undefined) {
+    toolsCount.textContent = status.tools;
+
+    if (status.tools === 33) {
+      infoMessage.innerHTML = '<strong>✅ Everything is working!</strong>You can now use Claude Desktop, Cursor, or Windsurf to interact with your browser through 33 powerful tools.';
+      infoMessage.style.display = 'block';
+      reconnectBtn.style.display = 'none';
+    } else if (status.tools === 0) {
+      infoMessage.innerHTML = '<strong>⏳ Waiting for MCP Server...</strong>The extension is ready, but the MCP server needs to be running. Start your IDE (Claude Desktop, Cursor, or Windsurf) and the server will launch automatically.';
+      infoMessage.style.display = 'block';
+      reconnectBtn.style.display = 'block';
     }
-    
-  } catch (error) {
-    console.error('Failed to get status:', error);
-    statusIndicator.className = 'status-indicator error';
-    statusText.textContent = 'Error';
-    statusMessage.textContent = error.message;
   }
 }
 
-/**
- * Test connection by calling a tool
- */
-async function testConnection() {
-  try {
-    testBtn.disabled = true;
-    testBtn.textContent = 'Testing...';
-    
-    const response = await chrome.runtime.sendMessage({
-      type: 'TEST_TOOL',
-      method: 'tools/list',
-      params: {}
-    });
-    
-    if (response.result) {
-      alert(`✓ Connection test successful!\n\nFound ${response.result.tools.length} tools:\n${response.result.tools.map(t => `- ${t.name}`).join('\n')}`);
-    } else if (response.error) {
-      alert(`✗ Connection test failed:\n${response.error.message}`);
+// Check status
+function checkStatus() {
+  console.log('[Popup] Checking status...');
+
+  chrome.runtime.sendMessage({ type: 'getStatus' }, (response) => {
+    if (chrome.runtime.lastError) {
+      console.error('[Popup] Error getting status:', chrome.runtime.lastError);
+      updateStatus({
+        websocket: { connected: false },
+        server: { running: false },
+        tools: 0
+      });
+      return;
     }
-    
-  } catch (error) {
-    alert(`✗ Connection test failed:\n${error.message}`);
-  } finally {
-    testBtn.disabled = false;
+
+    console.log('[Popup] Received status:', response);
+    updateStatus(response);
+  });
+}
+
+// Test connection
+testBtn.addEventListener('click', () => {
+  console.log('[Popup] Testing connection...');
+  testBtn.textContent = 'Testing...';
+  testBtn.disabled = true;
+
+  chrome.runtime.sendMessage({ type: 'testConnection' }, (response) => {
     testBtn.textContent = 'Test Connection';
+    testBtn.disabled = false;
+
+    if (chrome.runtime.lastError) {
+      alert('❌ Test failed: ' + chrome.runtime.lastError.message);
+      return;
+    }
+
+    if (response && response.success) {
+      alert('✅ Connection test successful!\n\n' +
+            'Extension: Connected\n' +
+            'WebSocket: Connected\n' +
+            'MCP Server: Running\n' +
+            'Tools: ' + (response.tools || 0) + ' available');
+    } else {
+      alert('⚠️ Connection test failed\n\n' +
+            'The extension is running but cannot connect to the MCP server.\n\n' +
+            'Make sure your IDE (Claude Desktop, Cursor, or Windsurf) is running.');
+    }
+
+    checkStatus();
+  });
+});
+
+// Reconnect
+reconnectBtn.addEventListener('click', () => {
+  console.log('[Popup] Reconnecting...');
+  reconnectBtn.textContent = 'Reconnecting...';
+  reconnectBtn.disabled = true;
+
+  chrome.runtime.sendMessage({ type: 'reconnect' }, () => {
+    reconnectBtn.textContent = 'Reconnect to Server';
+    reconnectBtn.disabled = false;
+
+    setTimeout(checkStatus, 1000);
+  });
+});
+
+// Listen for status updates from background
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === 'statusUpdate') {
+    console.log('[Popup] Status update from background:', message.status);
+    updateStatus(message.status);
   }
-}
+});
 
-// Event listeners
-refreshBtn.addEventListener('click', updateStatus);
-testBtn.addEventListener('click', testConnection);
-
-// Initial update
-updateStatus();
-
-// Auto-refresh every 5 seconds
-setInterval(updateStatus, 5000);
-
-console.log('[Browser MCP] Popup loaded');
-
+// Check status on load and every 2 seconds
+checkStatus();
+setInterval(checkStatus, 2000);

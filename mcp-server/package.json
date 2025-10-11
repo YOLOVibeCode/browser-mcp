@@ -1,6 +1,6 @@
 {
   "name": "@rvegajr/browser-mcp-server",
-  "version": "4.0.9",
+  "version": "4.0.10",
   "description": "MCP Server for Browser MCP - WebSocket-based bridge between IDEs and Chrome Extension",
   "main": "index.js",
   "bin": {

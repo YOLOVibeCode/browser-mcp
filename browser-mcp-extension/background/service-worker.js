@@ -162,4 +162,39 @@ setInterval(() => {
   console.log('[Browser MCP] Keepalive ping - Connected:', wsClient.isConnected());
 }, 20000);
 
+// Handle messages from popup
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  console.log('[Browser MCP] Received message from popup:', message.type);
+
+  if (message.type === 'getStatus') {
+    const status = {
+      websocket: {
+        connected: wsClient.isConnected()
+      },
+      server: {
+        running: wsClient.isConnected()
+      },
+      tools: mcpServer.tools.size || 33
+    };
+    console.log('[Browser MCP] Sending status:', status);
+    sendResponse(status);
+    return true;
+  }
+
+  if (message.type === 'testConnection') {
+    const success = wsClient.isConnected();
+    sendResponse({
+      success,
+      tools: success ? (mcpServer.tools.size || 33) : 0
+    });
+    return true;
+  }
+
+  if (message.type === 'reconnect') {
+    wsClient.connect();
+    sendResponse({ success: true });
+    return true;
+  }
+});
+
 console.log('[Browser MCP] Service worker initialized successfully! 🚀');
