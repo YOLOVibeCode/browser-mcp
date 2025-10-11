@@ -1,6 +1,6 @@
 {
   "name": "browser-mcp",
-  "version": "4.0.8",
+  "version": "4.0.9",
   "description": "Browser MCP - WebSocket-based Chrome Extension for AI-powered browser debugging via MCP",
   "private": true,
   "type": "module",
@@ -20,7 +20,10 @@
     "test:ai": "playwright test browser-mcp-extension/tests/ai-assistant-integration.e2e.spec.js --reporter=list --timeout=120000",
     "test:ide": "playwright test browser-mcp-extension/tests/ide-compatibility.e2e.spec.js --reporter=list --timeout=120000",
     "test:quick": "node browser-mcp-extension/tests/e2e.test.js",
-    "test:performance": "npm run test:tools:validation -- --grep 'Performance benchmark'"
+    "test:performance": "npm run test:tools:validation -- --grep 'Performance benchmark'",
+    "start:mcp": "./scripts/start-mcp-server.sh",
+    "stop:mcp": "lsof -ti:8765 | xargs kill -9 2>/dev/null || echo 'No MCP server running'",
+    "restart:mcp": "npm run stop:mcp && sleep 2 && npm run start:mcp"
   },
   "devDependencies": {
     "@anthropic-ai/sdk": "^0.27.0",
