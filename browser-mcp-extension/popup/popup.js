@@ -3,6 +3,18 @@
  * WebSocket-based architecture
  */
 
+// Load version from manifest.json (single source of truth)
+const manifest = chrome.runtime.getManifest();
+const VERSION = manifest.version;
+
+// Update version display immediately
+document.addEventListener('DOMContentLoaded', () => {
+  const versionDisplay = document.getElementById('version-display');
+  if (versionDisplay) {
+    versionDisplay.textContent = `Version ${VERSION} • WebSocket Architecture`;
+  }
+});
+
 // Status elements
 const serverStatus = document.getElementById('server-status');
 const serverText = document.getElementById('server-text');
